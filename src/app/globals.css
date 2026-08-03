@@ -1,0 +1,603 @@
+@import "tailwindcss";
+
+/* ============================================================
+   HumanLink · Tema oscuro moderno (Dashbrd-style)
+   El tema oscuro es el predeterminado. `html.light` activa claro.
+   ============================================================ */
+
+:root {
+  /* Marca HumanLink */
+  --brand-cyan: #00ccff;
+  --brand-cyan-dim: #00a8d4;
+  --brand-dark: #0a0c10;
+  --brand-wordmark-human: #ffffff;
+  --brand-wordmark-link: #00ccff;
+  --brand-wordmark-size: 1.625rem;
+  --brand-wordmark-weight: 700;
+  --brand-wordmark-tracking: -0.02em;
+  --brand-wordmark-gap: 0;
+
+  /* Marca / acentos (alineados a HumanLink) */
+  --color-primary: #00a8d4;
+  --color-primary-light: #00ccff;
+  --color-secondary: #22c55e;
+  --color-accent: #8b5cf6;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* Superficies (oscuro por defecto) */
+  --color-bg: #0b0d12;
+  --color-bg-2: #0e1117;
+  --color-surface: #14171f;
+  --color-surface-2: #1b1f29;
+  --color-surface-3: #232834;
+  --color-border: #272c38;
+  --color-text: #e6e8ee;
+  --color-muted: #8b92a3;
+  --color-sidebar: #0e1117;
+
+  --shadow-card: none;
+  --radius-card: 1rem;
+
+  color-scheme: dark;
+}
+
+/* Tema claro opcional */
+html.light {
+  --color-bg: #eef1f6;
+  --color-bg-2: #e7ebf2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f6f9;
+  --color-surface-3: #eaedf2;
+  --color-border: #dce0e8;
+  --color-text: #1f2733;
+  --color-muted: #64748b;
+  --color-sidebar: #111827;
+  --shadow-card: none;
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(0, 168, 212, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(0, 204, 255, 0.04), transparent 55%),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-brand, "Plus Jakarta Sans"), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* Scrollbars sutiles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-3) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-surface-3);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #313845;
+}
+
+/* ============================================================
+   Componentes
+   ============================================================ */
+@layer components {
+  .btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    @apply px-4 py-2 rounded-xl font-medium transition-all disabled:opacity-50;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+  .btn-secondary {
+    background: var(--color-secondary);
+    color: #fff;
+    @apply px-4 py-2 rounded-xl font-medium transition-all;
+  }
+  .btn-secondary:hover {
+    filter: brightness(1.08);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    @apply px-4 py-2 rounded-xl font-medium transition-colors;
+  }
+  .btn-outline:hover {
+    background: var(--color-surface-2);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-card);
+    @apply rounded-2xl p-5;
+  }
+  .input-field {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    @apply w-full rounded-xl px-3 py-2 transition-colors;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  }
+  .input-field::placeholder {
+    color: var(--color-muted);
+  }
+  .label-field {
+    color: var(--color-muted);
+    @apply block text-sm font-medium mb-1;
+  }
+
+  .page-header {
+    @apply flex flex-wrap justify-between items-start gap-4 mb-6;
+  }
+  .page-title {
+    color: var(--color-text);
+    @apply text-2xl font-bold leading-tight;
+  }
+  .page-subtitle {
+    color: var(--color-muted);
+    @apply text-sm mt-1 mb-6;
+  }
+  .page-header-actions {
+    @apply flex flex-wrap gap-2;
+  }
+  .text-muted {
+    color: var(--color-muted);
+  }
+  .text-success {
+    color: var(--color-secondary);
+  }
+  .form-alert-error {
+    color: var(--color-danger);
+    @apply text-sm p-3 rounded-xl border;
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+  }
+  .form-alert-success {
+    color: var(--color-secondary);
+    @apply text-sm p-3 rounded-xl border;
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.08);
+  }
+
+  .field-error {
+    color: var(--color-danger);
+    @apply text-xs mt-1;
+  }
+  .field-hint {
+    color: var(--color-muted);
+    @apply text-xs mt-1;
+  }
+  .field-invalid .input-field,
+  .input-field.field-invalid {
+    border-color: var(--color-danger) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  }
+  .field-valid .input-field,
+  .input-field.field-valid {
+    border-color: var(--color-secondary) !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  }
+
+  .hl-table-shell {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    @apply rounded-2xl overflow-hidden;
+  }
+  .hl-table-toolbar {
+    @apply flex flex-wrap gap-3 items-end p-4 border-b;
+    border-color: var(--color-border);
+  }
+  .hl-table-search {
+    @apply relative flex-1 min-w-[200px];
+  }
+  .hl-table-search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2;
+    color: var(--color-muted);
+  }
+  .hl-table-search .input-field {
+    @apply pl-9;
+  }
+  .hl-table-wrap {
+    @apply overflow-x-auto;
+  }
+  .hl-table {
+    @apply w-full text-sm;
+  }
+  .hl-table thead tr {
+    background: var(--color-surface-2);
+  }
+  .hl-table th {
+    @apply px-4 py-3 text-left font-semibold whitespace-nowrap;
+    color: var(--color-muted);
+  }
+  .hl-table td {
+    @apply px-4 py-3 align-middle;
+    border-top: 1px solid var(--color-border);
+  }
+  .hl-table tbody tr:nth-child(even) {
+    background: var(--color-surface-2);
+  }
+  .hl-table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  }
+  .hl-table-empty {
+    @apply text-center py-10;
+    color: var(--color-muted);
+  }
+  .hl-table-sort {
+    @apply inline-flex items-center gap-1 font-semibold;
+    color: inherit;
+  }
+  .hl-pagination {
+    @apply flex flex-wrap justify-between items-center gap-3 px-4 py-3 border-t text-sm;
+    border-color: var(--color-border);
+  }
+  .hl-pagination-controls {
+    @apply flex items-center gap-2;
+  }
+
+  .hl-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold;
+  }
+  .hl-badge-neutral {
+    background: var(--color-surface-3);
+    color: var(--color-text);
+  }
+  .hl-badge-primary {
+    background: rgba(59, 130, 246, 0.18);
+    color: var(--color-primary-light);
+  }
+  .hl-badge-success {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+  }
+  .hl-badge-danger {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+  }
+  .hl-badge-warning {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fcd34d;
+  }
+
+  .hl-modal-backdrop {
+    @apply fixed inset-0 z-[70] flex items-center justify-center p-4;
+    background: rgba(0, 0, 0, 0.55);
+  }
+  .hl-modal {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    @apply rounded-2xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl;
+  }
+  .hl-modal-lg {
+    @apply max-w-2xl;
+  }
+  .hl-modal-title {
+    @apply text-lg font-semibold mb-4;
+  }
+  .hl-modal-footer {
+    @apply flex flex-wrap gap-2 justify-end mt-4 pt-4 border-t;
+    border-color: var(--color-border);
+  }
+
+  /* —— Marca: logotipo tipográfico único (sin imágenes, sin variantes) —— */
+  .hl-brand-logo {
+    display: inline-flex;
+    flex-shrink: 0;
+    max-width: 100%;
+  }
+
+  .hl-wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--brand-wordmark-gap);
+    line-height: 1;
+    font-family: var(--font-brand, "Plus Jakarta Sans"), system-ui, sans-serif;
+    font-size: var(--brand-wordmark-size);
+    font-weight: var(--brand-wordmark-weight);
+    letter-spacing: var(--brand-wordmark-tracking);
+    white-space: nowrap;
+  }
+
+  .hl-wordmark-human {
+    color: var(--brand-wordmark-human);
+  }
+
+  .hl-wordmark-link {
+    color: var(--brand-wordmark-link);
+  }
+
+  .hl-wordmark-shell {
+    display: inline-flex;
+    align-items: center;
+    background: var(--brand-dark);
+    padding: 0.625rem 1.125rem;
+    border-radius: 0.75rem;
+  }
+
+  .text-center .hl-wordmark-shell,
+  .text-center > .hl-brand-logo,
+  .text-center > .hl-wordmark {
+    margin-inline: auto;
+  }
+
+  .app-sidebar-brand-link .hl-wordmark,
+  .app-topbar-brand .hl-wordmark,
+  .hl-nav-logo .hl-wordmark {
+    max-width: 100%;
+  }
+
+  /* —— Shell del panel (sidebar + header unificados) —— */
+  .app-shell {
+    @apply flex min-h-screen;
+  }
+  .app-sidebar {
+    @apply w-64 h-screen flex flex-col fixed left-0 top-0 z-50 border-r transform transition-transform duration-200 -translate-x-full lg:translate-x-0;
+    background: var(--color-sidebar);
+    border-color: var(--color-border);
+  }
+  .app-sidebar--open {
+    @apply translate-x-0;
+  }
+  .app-sidebar-backdrop {
+    @apply fixed inset-0 z-40;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .app-sidebar-brand {
+    @apply px-6 py-5 border-b;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .app-sidebar-brand-link {
+    @apply inline-flex items-center;
+  }
+  .app-sidebar-role {
+    @apply text-xs mt-3 font-medium;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .app-sidebar-email {
+    @apply text-xs mt-1 truncate;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .app-sidebar-nav {
+    @apply flex-1 min-h-0 overflow-y-auto py-4 px-3;
+  }
+  .app-sidebar-group {
+    @apply mb-4;
+  }
+  .app-sidebar-group-label {
+    @apply text-xs uppercase tracking-wider px-3 mb-2;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .app-sidebar-link {
+    @apply block px-3 py-2 rounded-lg mb-0.5 text-sm transition-colors;
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .app-sidebar-link:hover {
+    @apply text-white;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .app-sidebar-link--active {
+    @apply text-white font-medium;
+    background: var(--color-primary);
+  }
+  .app-sidebar-footer {
+    @apply p-4 border-t;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .app-sidebar-logout {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full transition-colors;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .app-sidebar-logout:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .app-main {
+    @apply flex-1 flex flex-col min-w-0 lg:ml-64;
+  }
+  .app-topbar {
+    @apply sticky top-0 z-30 flex items-center justify-between gap-4 px-4 lg:px-6 py-3 border-b;
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-color: var(--color-border);
+    min-height: 72px;
+  }
+  .app-topbar-start {
+    @apply flex items-center gap-3 min-w-0;
+  }
+  .app-topbar-end {
+    @apply flex items-center gap-3 shrink-0;
+  }
+  .app-topbar-brand {
+    @apply inline-flex items-center shrink-0;
+  }
+  .app-topbar-menu-btn {
+    @apply p-2 rounded-xl shrink-0 transition-colors;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+  .app-main-content {
+    @apply flex-1 p-4 lg:p-6;
+  }
+  .app-main-content > * {
+    @apply max-w-[1500px] mx-auto w-full;
+  }
+
+  /* RNF-PQ01 — antigüedad (una sola gama: primary) */
+  .hl-age-claro td:first-child {
+    box-shadow: inset 4px 0 0 rgba(59, 130, 246, 0.25);
+  }
+  .hl-age-medio td:first-child {
+    box-shadow: inset 4px 0 0 rgba(59, 130, 246, 0.55);
+  }
+  .hl-age-critico td:first-child {
+    box-shadow: inset 4px 0 0 rgba(59, 130, 246, 0.95);
+  }
+  .hl-age-cerrada td:first-child {
+    box-shadow: inset 4px 0 0 rgba(59, 130, 246, 0.12);
+  }
+  .hl-age-pill {
+    @apply text-xs font-medium px-2 py-0.5 rounded-md;
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--color-primary-light);
+  }
+  .hl-age-pill.hl-age-medio {
+    background: rgba(59, 130, 246, 0.28);
+  }
+  .hl-age-pill.hl-age-critico {
+    background: rgba(59, 130, 246, 0.45);
+    color: #fff;
+  }
+}
+
+/* ============================================================
+   Overrides de utilidades comunes (reglas sin @layer ganan a
+   las de Tailwind). Así el tema oscuro aplica a páginas que
+   usan colores claros hardcodeados, sin editar archivo por archivo.
+   ============================================================ */
+
+.bg-white {
+  background-color: var(--color-surface) !important;
+}
+/* Evitar filas forzadas a blanco en tablas (contraste ilegible en tema oscuro) */
+.hl-table tbody tr[style*="background"] {
+  background: unset !important;
+}
+.bg-gray-50,
+.bg-\[\#F4F6F7\],
+.bg-\[\#f4f6f7\] {
+  background-color: var(--color-surface-2) !important;
+}
+.bg-\[\#F3F4F6\],
+.bg-\[\#f3f4f6\] {
+  background-color: var(--color-surface-2) !important;
+}
+.bg-\[\#EBF5FB\],
+.bg-\[\#ebf5fb\],
+.bg-\[\#D6EAF8\] {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+  color: var(--color-primary-light) !important;
+}
+
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-\[\#F4F6F7\]:hover {
+  background-color: var(--color-surface-2) !important;
+}
+
+/* Textos grises de marca → texto/atenuado del tema */
+.text-\[\#7F8C8D\],
+.text-\[\#7f8c8d\],
+.text-gray-400,
+.text-gray-500,
+.text-gray-600 {
+  color: var(--color-muted) !important;
+}
+.text-\[\#2C3E50\],
+.text-\[\#2c3e50\],
+.text-gray-700,
+.text-gray-800,
+.text-gray-900 {
+  color: var(--color-text) !important;
+}
+
+/* Bordes de marca → borde del tema */
+.border-\[\#D5DBDB\],
+.border-\[\#d5dbdb\] {
+  border-color: var(--color-border) !important;
+}
+
+/* Azules marinos de marca usados como texto → acento legible */
+.text-\[\#1B4F72\],
+.text-\[\#1b4f72\],
+.text-\[\#154360\],
+.text-\[\#2874A6\],
+.text-\[\#2874a6\] {
+  color: var(--color-primary-light) !important;
+}
+
+/* Inputs/textareas/selects sin clase .input-field */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  color: var(--color-text);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+/* Tablas: separadores y cabeceras */
+table thead tr,
+.border-b {
+  border-color: var(--color-border);
+}
+
+/* RNF-07 — layout estable entre navegadores (estándares web) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+img,
+video,
+svg {
+  max-width: 100%;
+}
+img:not(.hl-media-img) {
+  height: auto;
+}
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+/* Indicador de sesión (encabezado) */
+.session-indicator {
+  @apply flex items-center gap-3 rounded-xl px-3 py-2 max-w-[280px];
+}
+.session-indicator--compact {
+  @apply max-w-[200px] py-1.5;
+}
+.session-indicator-text {
+  @apply min-w-0 leading-tight;
+}
+.session-indicator-status {
+  @apply text-[11px] font-medium flex items-center gap-1.5;
+  color: var(--color-secondary);
+}
+.session-indicator-dot {
+  @apply inline-block w-2 h-2 rounded-full shrink-0;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+.session-indicator-name {
+  @apply text-sm font-semibold truncate;
+  color: var(--color-text);
+}
+.session-indicator-role {
+  @apply text-xs truncate;
+  color: var(--color-primary-light);
+}
+.session-indicator-emp {
+  @apply text-[11px] truncate;
+  color: var(--color-muted);
+}

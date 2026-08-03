@@ -1,0 +1,13 @@
+
+> humanlink@1.0.0 dev
+> next dev -p 3007
+
+   ▲ Next.js 15.5.19
+   - Local:        http://localhost:3007
+   - Network:      http://192.168.1.72:3007
+   - Environments: .env
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ✓ Ready in 2.2s

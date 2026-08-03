@@ -1,0 +1,143 @@
+-- ============================================================================
+--  HumanLink · INVENTARIO DE ÍNDICES MySQL 8
+-- ----------------------------------------------------------------------------
+--  Fuente verificada: prisma/migrations/20260801190000_init_mysql/migration.sql
+--  y prisma/schema.prisma — NO incluye índices inventados.
+-- ============================================================================
+
+-- --------------------------------------------------------------------------
+-- CLAVES PRIMARIAS (PK) — Patrón en 48 tablas: PRIMARY KEY (`id`) AUTO_INCREMENT
+-- --------------------------------------------------------------------------
+-- Rol, Usuario, Organizacion, Departamento, Turno, Empleado, Vacante,
+-- Candidato, ContactoLead, Capacitacion, CapacitacionEmpleado, Asistencia,
+-- SolicitudPermiso, EvaluacionDesempeno, QuejaLaboral, QuejaHistorial,
+-- EventoOrganizacional, EventoRespuesta, Documento, HistorialReporte,
+-- Notificacion, AuditoriaLog, ObjetivoOKR, Encuesta, EncuestaRespuesta,
+-- RegistroHomeOffice, TicketSoporte, TicketMensaje, FirmaDocumento,
+-- OnboardingPlantilla, OnboardingTareaEmpleado, Offboarding, TokenRecuperacion,
+-- PreferenciaUsuario, SesionUsuario, EmailLog, BolsaHoras, ActivoAsignado,
+-- BeneficioEmpleado, Incapacidad, HeadcountPlan, Competencia,
+-- CompetenciaEmpleado, PlanCarrera, Reconocimiento, Comunicado,
+-- WorkflowAprobacion, CalculoLaboralInfo
+
+-- --------------------------------------------------------------------------
+-- ÍNDICES UNIQUE (existen en migración Prisma)
+-- --------------------------------------------------------------------------
+-- Rol_nombre_key                                    → Rol(nombre)
+-- Usuario_email_key                                 → Usuario(email)
+-- Empleado_numeroEmpleado_key                       → Empleado(numeroEmpleado)
+-- Empleado_email_key                                → Empleado(email)
+-- Empleado_curp_key                                 → Empleado(curp)
+-- Empleado_rfc_key                                  → Empleado(rfc)
+-- Empleado_usuarioId_key                            → Empleado(usuarioId)
+-- CapacitacionEmpleado_capacitacionId_empleadoId_key
+-- Asistencia_empleadoId_fecha_key                   → RF-H06 una checada/día
+-- EventoRespuesta_eventoId_empleadoId_key
+-- RegistroHomeOffice_empleadoId_fecha_key
+-- FirmaDocumento_empleadoId_documento_version_key
+-- TokenRecuperacion_token_key
+-- PreferenciaUsuario_usuarioId_key
+-- HeadcountPlan_departamentoId_anio_mes_key
+-- Competencia_nombre_key
+-- CompetenciaEmpleado_empleadoId_competenciaId_key
+-- CalculoLaboralInfo_empleadoId_key
+
+-- --------------------------------------------------------------------------
+-- ÍNDICES SECUNDARIOS INDEX (existen en migración Prisma)
+-- --------------------------------------------------------------------------
+-- Usuario_rolId_idx
+-- Departamento_organizacionId_idx, Departamento_supervisorId_idx
+-- Turno_nombre_idx, Turno_activo_idx
+-- Empleado_departamentoId_idx, Empleado_nombre_apellidoPaterno_idx
+-- Empleado_puesto_idx, Empleado_turnoId_idx, Empleado_activo_idx
+-- Vacante_departamentoId_idx, Vacante_estado_idx
+-- Candidato_vacanteId_idx, Candidato_etapa_idx
+-- CapacitacionEmpleado_empleadoId_idx
+-- Asistencia_fecha_idx, Asistencia_estado_idx
+-- SolicitudPermiso_empleadoId_idx, SolicitudPermiso_estado_idx, SolicitudPermiso_tipo_idx
+-- EvaluacionDesempeno_empleadoId_idx
+-- QuejaLaboral_estado_idx, QuejaLaboral_createdAt_idx
+-- QuejaHistorial_quejaId_idx
+-- EventoRespuesta_eventoId_idx
+-- Documento_empleadoId_idx, Documento_tipo_idx, Documento_activo_idx, Documento_vencimiento_idx
+-- HistorialReporte_mes_idx, HistorialReporte_usuarioId_idx
+-- Notificacion_usuarioId_leida_idx
+-- AuditoriaLog_modulo_idx, AuditoriaLog_createdAt_idx
+-- ObjetivoOKR_empleadoId_idx
+-- EncuestaRespuesta_encuestaId_idx
+-- RegistroHomeOffice_fecha_idx
+-- TicketSoporte_estado_idx, TicketSoporte_prioridad_idx
+-- TicketMensaje_ticketId_idx
+-- OnboardingTareaEmpleado_empleadoId_idx
+-- Offboarding_empleadoId_idx
+-- TokenRecuperacion_email_idx
+-- SesionUsuario_usuarioId_idx
+-- BolsaHoras_empleadoId_idx
+-- ActivoAsignado_empleadoId_idx
+-- BeneficioEmpleado_empleadoId_idx
+-- Incapacidad_empleadoId_idx
+-- PlanCarrera_empleadoId_idx
+-- Reconocimiento_aEmpleadoId_idx
+-- Comunicado_createdAt_idx
+
+-- --------------------------------------------------------------------------
+-- CLAVES FORÁNEAS (FK) — migration.sql líneas 758-891
+-- --------------------------------------------------------------------------
+-- Usuario_rolId_fkey                         → Rol(id) RESTRICT
+-- Departamento_organizacionId_fkey           → Organizacion(id) CASCADE
+-- Departamento_supervisorId_fkey             → Empleado(id) SET NULL
+-- Empleado_departamentoId_fkey               → Departamento(id) SET NULL
+-- Empleado_turnoId_fkey                      → Turno(id) SET NULL
+-- Empleado_usuarioId_fkey                    → Usuario(id) SET NULL
+-- Vacante_departamentoId_fkey                → Departamento(id) CASCADE
+-- Candidato_vacanteId_fkey                   → Vacante(id) CASCADE
+-- CapacitacionEmpleado_capacitacionId_fkey   → Capacitacion(id) CASCADE
+-- CapacitacionEmpleado_empleadoId_fkey       → Empleado(id) CASCADE
+-- Asistencia_empleadoId_fkey                 → Empleado(id) CASCADE
+-- SolicitudPermiso_empleadoId_fkey           → Empleado(id) CASCADE
+-- EvaluacionDesempeno_empleadoId_fkey        → Empleado(id) CASCADE
+-- EvaluacionDesempeno_evaluadorId_fkey       → Empleado(id) CASCADE
+-- QuejaLaboral_empleadoId_fkey               → Empleado(id) CASCADE
+-- QuejaHistorial_quejaId_fkey                → QuejaLaboral(id) CASCADE
+-- QuejaHistorial_usuarioId_fkey              → Usuario(id) RESTRICT
+-- EventoRespuesta_eventoId_fkey              → EventoOrganizacional(id) CASCADE
+-- EventoRespuesta_empleadoId_fkey            → Empleado(id) CASCADE
+-- Documento_empleadoId_fkey                  → Empleado(id) CASCADE
+-- HistorialReporte_usuarioId_fkey            → Usuario(id) CASCADE
+-- Notificacion_usuarioId_fkey                → Usuario(id) CASCADE
+-- ObjetivoOKR_empleadoId_fkey                → Empleado(id) CASCADE
+-- EncuestaRespuesta_encuestaId_fkey          → Encuesta(id) CASCADE
+-- EncuestaRespuesta_empleadoId_fkey          → Empleado(id) SET NULL
+-- RegistroHomeOffice_empleadoId_fkey         → Empleado(id) CASCADE
+-- TicketSoporte_empleadoId_fkey              → Empleado(id) CASCADE
+-- TicketMensaje_ticketId_fkey                → TicketSoporte(id) CASCADE
+-- FirmaDocumento_empleadoId_fkey             → Empleado(id) CASCADE
+-- OnboardingTareaEmpleado_empleadoId_fkey    → Empleado(id) CASCADE
+-- Offboarding_empleadoId_fkey                → Empleado(id) CASCADE
+-- PreferenciaUsuario_usuarioId_fkey          → Usuario(id) CASCADE
+-- SesionUsuario_usuarioId_fkey               → Usuario(id) CASCADE
+-- BolsaHoras_empleadoId_fkey                 → Empleado(id) CASCADE
+-- ActivoAsignado_empleadoId_fkey             → Empleado(id) CASCADE
+-- BeneficioEmpleado_empleadoId_fkey          → Empleado(id) CASCADE
+-- Incapacidad_empleadoId_fkey                → Empleado(id) CASCADE
+-- HeadcountPlan_departamentoId_fkey          → Departamento(id) CASCADE
+-- CompetenciaEmpleado_empleadoId_fkey        → Empleado(id) CASCADE
+-- CompetenciaEmpleado_competenciaId_fkey     → Competencia(id) CASCADE
+-- PlanCarrera_empleadoId_fkey                → Empleado(id) CASCADE
+-- Reconocimiento_deEmpleadoId_fkey           → Empleado(id) CASCADE
+-- Reconocimiento_aEmpleadoId_fkey            → Empleado(id) CASCADE
+-- Comunicado_autorId_fkey                    → Empleado(id) CASCADE
+-- CalculoLaboralInfo_empleadoId_fkey         → Empleado(id) CASCADE
+
+-- --------------------------------------------------------------------------
+-- Consulta de verificación en MySQL (evidencia para exposición)
+-- --------------------------------------------------------------------------
+-- SHOW INDEX FROM Empleado;
+-- SELECT TABLE_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME
+--   FROM information_schema.KEY_COLUMN_USAGE
+--  WHERE TABLE_SCHEMA = 'humanlink' AND REFERENCED_TABLE_NAME IS NOT NULL
+--  ORDER BY TABLE_NAME;
+
+-- ============================================================================
+-- FIN · Inventario alineado 100% con Prisma migrate
+-- ============================================================================

@@ -1,0 +1,15 @@
+---
+description: Alcance IEEE 830 — HumanLink SGRH (solo módulos RF permitidos)
+alwaysApply: true
+---
+
+# HumanLink — Alcance estricto
+
+- NO agregar módulos, pantallas, tablas ni lógica que no estén en los RF o en la lista de módulos permitidos del proyecto.
+- NO nómina, finanzas, inventarios, CRM, IA, chat, multiempresa, multiidioma, integraciones externas no definidas.
+- Diseño: limpio, minimalista, corporativo; sin animaciones/gradientes decorativos excesivos.
+- Antes de crear algo: verificar que exista en los RF.
+
+Módulos permitidos (menú/UI): Autenticación, Empleados, Expedientes (vía empleado), Vacantes, Contrataciones, Capacitaciones, Asistencias, Roles, Reportes, Evaluaciones, Notificaciones, Búsquedas, Permisos y Vacaciones, Perfil, Quejas Laborales, Eventos Organizacionales, Turnos Laborales; Bonos e Incentivos y Rutas de Transporte solo si hay RF explícito.
+
+Al cerrar tareas de desarrollo, indicar RF implementados y elementos fuera de alcance detectados o retirados.

@@ -1,0 +1,836 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// RF-H07 - Roles y permisos
+model Rol {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?  @db.Text
+  permisos    String   @db.Text // JSON array de permisos
+  usuarios    Usuario[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// RF-H01 - Autenticación
+model Usuario {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  passwordHash   String   
+  activo         Boolean   @default(true)
+  rolId          Int
+  intentosFallidos Int     @default(0) // RNF-B01
+  bloqueadoHasta DateTime? // RNF-B01
+  rol            Rol       @relation(fields: [rolId], references: [id])
+  empleado       Empleado?
+  notificaciones Notificacion[]
+  preferencias   PreferenciaUsuario?
+  sesiones       SesionUsuario[]
+  historialReportes HistorialReporte[]
+  quejaHistorial    QuejaHistorial[]
+  totpSecret     String?
+  totpEnabled    Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([rolId])
+}
+
+// Organización empresarial (estructura organizacional)
+model Organizacion {
+  id               Int            @id @default(autoincrement())
+  nombre           String        
+  razonSocial      String?       
+  rfc              String?       
+  direccion        String?       
+  telefono         String?       
+  email            String?       
+  activa           Boolean        @default(true)
+  // Personalización de marca (RNF16)
+  logoUrl          String?       @db.VarChar(500)
+  nombreComercial  String?
+  colorPrimario    String?        @default("#3b82f6")
+  colorSecundario  String?        @default("#22c55e")
+  colorAcento      String?        @default("#8b5cf6")
+  diasAnticipacionVacacion Int    @default(7)
+  maxDiasConsecutivosVacacion Int @default(15)
+  permitirHomeOffice       Boolean @default(true)
+  departamentos    Departamento[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+// RF-H19 - Gestión de Departamentos
+model Departamento {
+  id              Int           @id @default(autoincrement())
+  nombre          String       
+  descripcion     String?      @db.Text
+  organizacionId  Int
+  organizacion    Organizacion  @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  supervisorId    Int?
+  supervisor      Empleado?     @relation("SupervisorDepartamento", fields: [supervisorId], references: [id], onDelete: SetNull)
+  ubicacion       String?       // RF-H19 opcional
+  cantidadVacantes Int          @default(0) // RF-H19 — máximo de vacantes (0 = sin límite)
+  activo          Boolean       @default(true) // RF-H19
+  empleados       Empleado[]    @relation("EmpleadoDepartamento")
+  vacantes        Vacante[]
+  headcountPlans  HeadcountPlan[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([organizacionId])
+  @@index([supervisorId])
+}
+
+// RF-H20 - Turnos laborales
+model Turno {
+  id          Int       @id @default(autoincrement())
+  nombre      String   
+  horaInicio  String    // HH:mm
+  horaFin     String   
+  descripcion String?  @db.Text 
+  activo      Boolean   @default(true) // RF-H20
+  empleados   Empleado[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // RNF12 - Índice para acelerar búsquedas por nombre/tipo de turno
+  @@index([nombre])
+  @@index([activo])
+}
+
+// RF-H02 - Gestión de Empleados
+model Empleado {
+  id              Int       @id @default(autoincrement())
+  numeroEmpleado  String    @unique
+  nombre          String   
+  apellidoPaterno String  
+  apellidoMaterno String? 
+  email           String    @unique
+  curp            String?   @unique // RNF13 - integridad: sin duplicados
+  rfc             String?   @unique // RNF13 - integridad: sin duplicados
+  telefono        String?  
+  fechaNacimiento DateTime?
+  fechaIngreso    DateTime 
+  puesto          String   
+  salario              Decimal?
+  activo               Boolean   @default(true)
+  fotoUrl              String?   @db.VarChar(500)
+  diasVacacionesExtra  Int       @default(0) // Días adicionales otorgados por RH
+  departamentoId       Int?
+  departamento    Departamento? @relation("EmpleadoDepartamento", fields: [departamentoId], references: [id], onDelete: SetNull)
+  turnoId         Int?
+  turno           Turno?    @relation(fields: [turnoId], references: [id], onDelete: SetNull)
+  usuarioId       Int?      @unique
+  usuario         Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  departamentosSupervisados Departamento[] @relation("SupervisorDepartamento")
+  asistencias     Asistencia[]
+  capacitaciones  CapacitacionEmpleado[]
+  solicitudes     SolicitudPermiso[]
+  evaluaciones    EvaluacionDesempeno[] @relation("EmpleadoEvaluado")
+  evaluacionesHechas EvaluacionDesempeno[] @relation("Evaluador")
+  quejas          QuejaLaboral[]
+  documentos      Documento[]
+  eventosRespuesta EventoRespuesta[]
+  objetivos        ObjetivoOKR[]
+  encuestasRespuesta EncuestaRespuesta[]
+  registrosHomeOffice RegistroHomeOffice[]
+  tickets          TicketSoporte[]
+  firmas           FirmaDocumento[]
+  onboardingTareas OnboardingTareaEmpleado[]
+  offboardings     Offboarding[]
+  bolsaHoras       BolsaHoras[]
+  activos          ActivoAsignado[]
+  beneficios       BeneficioEmpleado[]
+  incapacidades    Incapacidad[]
+  competencias     CompetenciaEmpleado[]
+  planesCarrera    PlanCarrera[]
+  kudosRecibidos   Reconocimiento[] @relation("KudoRecibido")
+  kudosEnviados    Reconocimiento[] @relation("KudoEnviado")
+  comunicados      Comunicado[]
+  calculoLaboral   CalculoLaboralInfo?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([departamentoId])
+  @@index([nombre, apellidoPaterno])
+  @@index([puesto])
+  // RNF12 - Índice para filtrar empleados por turno asignado
+  @@index([turnoId])
+  // RNF13 - Índice para filtrar empleados activos/inactivos a gran escala
+  @@index([activo])
+}
+
+// RF-H03 - Gestión de Vacantes | RNF01, RNF10
+model Vacante {
+  id              Int           @id @default(autoincrement())
+  titulo          String       
+  descripcion     String       @db.Text
+  requisitos      String?      @db.Text
+  departamentoId  Int
+  departamento    Departamento  @relation(fields: [departamentoId], references: [id], onDelete: Cascade)
+  cupoTotal       Int           @default(1)
+  cupoDisponible  Int           @default(1)
+  cupoBloqueado   Int           @default(0) // RNF10 - bloqueo temporal
+  estado          EstadoVacante @default(ABIERTA)
+  fechaPublicacion DateTime     @default(now())
+  fechaCierre     DateTime?
+  modalidad       String?       // Presencial, Híbrido, Remoto
+  tipoEmpleo      String?       // Tiempo completo, Medio tiempo, etc.
+  ubicacion       String?
+  salario         String?
+  candidatos      Candidato[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([departamentoId])
+  @@index([estado])
+}
+
+enum EstadoVacante {
+  ABIERTA
+  CERRADA
+  PAUSADA
+}
+
+// RF-H04 - Proceso de Contratación
+model Candidato {
+  id              Int              @id @default(autoincrement())
+  nombre          String          
+  apellidoPaterno String          
+  apellidoMaterno String?         
+  email           String          
+  telefono        String?         
+  curp            String?         
+  rfc             String?
+  direccion       String?      @db.Text
+  escolaridad     String?
+  experiencia     String?      @db.Text
+  cartaPresentacion String?    @db.Text
+  curriculum      String?      @db.VarChar(500)
+  vacanteId       Int
+  vacante         Vacante          @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
+  etapa           EtapaContratacion @default(RECEPCION)
+  notas           String?          @db.Text
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([vacanteId])
+  @@index([etapa])
+}
+
+model ContactoLead {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String
+  asunto    String
+  mensaje   String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+enum EtapaContratacion {
+  RECEPCION
+  REVISION_CV
+  ENTREVISTA
+  EVALUACION
+  OFERTA
+  CONTRATADO
+  RECHAZADO
+}
+
+// RF-H05 - Gestión de Capacitaciones | RNF18
+model Capacitacion {
+  id          Int       @id @default(autoincrement())
+  nombre      String   
+  descripcion String?  @db.Text 
+  instructor  String?  
+  fechaInicio DateTime 
+  fechaFin    DateTime?
+  cupoMaximo  Int       @default(30)
+  estado      String    @default("PROGRAMADA")
+  empleados   CapacitacionEmpleado[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model CapacitacionEmpleado {
+  id             Int          @id @default(autoincrement())
+  capacitacionId Int
+  capacitacion   Capacitacion @relation(fields: [capacitacionId], references: [id], onDelete: Cascade)
+  empleadoId     Int
+  empleado       Empleado     @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  estado         String       @default("INSCRITO")
+  calificacion   String?     
+  createdAt      DateTime     @default(now())
+
+  @@unique([capacitacionId, empleadoId])
+  @@index([empleadoId])
+}
+
+// RF-H06 - Control de checadas | RNF02
+model Asistencia {
+  id          Int            @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado       @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  fecha       DateTime      
+  horaEntrada String?       
+  horaSalida  String?       
+  turnoNombre String?       // snapshot al registrar entrada
+  estado      EstadoAsistencia @default(PUNTUAL)
+  notas       String?       @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([empleadoId, fecha])
+  @@index([fecha])
+  @@index([estado])
+}
+
+enum EstadoAsistencia {
+  PUNTUAL      // blanco - RNF02
+  RETARDO      // naranja - RNF02
+  FALTA        // rojo - RNF02
+  PERMISO
+  VACACION
+}
+
+// RF-H13 - Permisos y vacaciones
+model SolicitudPermiso {
+  id              Int            @id @default(autoincrement())
+  empleadoId      Int
+  empleado        Empleado       @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo            TipoSolicitud
+  fechaInicio     DateTime      
+  fechaFin        DateTime      
+  diasSolicitados Int            @default(1)
+  motivo          String        @db.Text
+  estado          EstadoSolicitud @default(PENDIENTE)
+  aprobacionSupervisor AprobacionSupervisor @default(PENDIENTE)
+  supervisorRespuesta  String?   @db.Text
+  supervisorAprobadoPorId Int?
+  supervisorFechaResolucion DateTime?
+  respuesta       String?       @db.Text
+  aprobadoPorId   Int?
+  fechaResolucion DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([empleadoId])
+  @@index([estado])
+  @@index([tipo])
+}
+
+enum TipoSolicitud {
+  PERMISO
+  VACACION
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum AprobacionSupervisor {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+  NO_APLICA
+}
+
+// RF-H11 - Evaluación de desempeño
+model EvaluacionDesempeno {
+  id           Int      @id @default(autoincrement())
+  empleadoId   Int
+  empleado     Empleado @relation("EmpleadoEvaluado", fields: [empleadoId], references: [id], onDelete: Cascade)
+  evaluadorId  Int
+  evaluador    Empleado @relation("Evaluador", fields: [evaluadorId], references: [id], onDelete: Cascade)
+  tipo         String   @default("DESEMPENO") // DESEMPENO, ANUAL, SEMESTRAL, PERIODO_PRUEBA, PROYECTO, 360
+  periodo      String  
+  comentarios  String   @db.Text // observaciones
+  puntaje      Int?     // calificación 0-100, manual
+  fecha        DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([empleadoId])
+}
+
+// RF-H16 - Quejas laborales
+model QuejaLaboral {
+  id          Int          @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado     @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  asunto      String      
+  descripcion String       @db.Text
+  estado      EstadoQueja  @default(REGISTRADA)
+  seguimiento String?      @db.Text
+  historial   QuejaHistorial[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([estado])
+  @@index([createdAt])
+}
+
+model QuejaHistorial {
+  id             Int          @id @default(autoincrement())
+  quejaId        Int
+  queja          QuejaLaboral @relation(fields: [quejaId], references: [id], onDelete: Cascade)
+  usuarioId      Int
+  usuario        Usuario      @relation(fields: [usuarioId], references: [id])
+  estadoAnterior String
+  estadoNuevo    String
+  createdAt      DateTime     @default(now())
+
+  @@index([quejaId])
+}
+
+enum EstadoQueja {
+  REGISTRADA
+  EN_REVISION
+  EN_PROCESO
+  RESUELTA
+  CERRADA
+}
+
+// RF-H17 - Eventos organizacionales | RNF11
+model EventoOrganizacional {
+  id                Int              @id @default(autoincrement())
+  titulo            String
+  descripcion       String?  @db.Text
+  fecha             DateTime
+  ubicacion         String?
+  inscripcionAbierta Boolean         @default(true)
+  activo            Boolean          @default(true) // RF-H17 baja lógica
+  respuestas        EventoRespuesta[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model EventoRespuesta {
+  id        Int                  @id @default(autoincrement())
+  eventoId  Int
+  evento    EventoOrganizacional @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  empleadoId Int
+  empleado  Empleado             @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  respuesta RespuestaEvento      @default(PENDIENTE)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@unique([eventoId, empleadoId])
+  @@index([eventoId])
+}
+
+enum RespuestaEvento {
+  PENDIENTE
+  CONFIRMADO
+  RECHAZADO
+}
+
+// RF-H18 - Gestión de documentos
+model Documento {
+  id            Int      @id @default(autoincrement())
+  empleadoId    Int
+  empleado      Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo          String  
+  nombre        String  
+  rutaArchivo   String   @db.VarChar(500)
+  observaciones String?  @db.Text
+  activo        Boolean  @default(true)
+  version       Int      @default(1) // legacy; no versionado en UI
+  vencimiento   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([empleadoId])
+  @@index([tipo])
+  @@index([activo])
+  @@index([vencimiento])
+}
+
+// RF-H08 - Historial de reportes generados
+model HistorialReporte {
+  id        Int      @id @default(autoincrement())
+  mes       String   // YYYY-MM
+  tipo      String
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([mes])
+  @@index([usuarioId])
+}
+
+// RF-H10 - Notificaciones
+model Notificacion {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  titulo    String  
+  mensaje   String   @db.Text  
+  tipo      String  
+  leida     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId, leida])
+}
+
+// Auditoría de cambios
+model AuditoriaLog {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int?
+  email     String?
+  accion    String
+  modulo    String
+  detalle   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([modulo])
+  @@index([createdAt])
+}
+
+// OKR / Objetivos
+model ObjetivoOKR {
+  id          Int      @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  titulo      String
+  descripcion String?  @db.Text
+  periodo     String
+  meta        Int      @default(100)
+  progreso    Int      @default(0)
+  estado      String   @default("ACTIVO")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([empleadoId])
+}
+
+// Encuestas de clima laboral
+model Encuesta {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  descripcion String?  @db.Text
+  anonima     Boolean  @default(true)
+  activa      Boolean  @default(true)
+  preguntas   String   @db.Text // JSON array
+  respuestas  EncuestaRespuesta[]
+  createdAt   DateTime @default(now())
+}
+
+model EncuestaRespuesta {
+  id         Int      @id @default(autoincrement())
+  encuestaId Int
+  encuesta   Encuesta @relation(fields: [encuestaId], references: [id], onDelete: Cascade)
+  empleadoId Int?
+  empleado   Empleado? @relation(fields: [empleadoId], references: [id], onDelete: SetNull)
+  respuestas String   @db.Text // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([encuestaId])
+}
+
+// Home office / días remotos
+model RegistroHomeOffice {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  fecha      DateTime
+  motivo     String?
+  createdAt  DateTime @default(now())
+
+  @@unique([empleadoId, fecha])
+  @@index([fecha])
+}
+
+// Tickets de soporte RH
+model TicketSoporte {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  asunto     String
+  categoria  String   @default("GENERAL")
+  prioridad  String   @default("MEDIA")
+  estado     String   @default("ABIERTO")
+  asignadoA  String?
+  slaHoras   Int      @default(48)
+  mensajes   TicketMensaje[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([estado])
+  @@index([prioridad])
+}
+
+model TicketMensaje {
+  id        Int           @id @default(autoincrement())
+  ticketId  Int
+  ticket    TicketSoporte @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  autorId   Int?
+  autorNombre String
+  mensaje   String   @db.Text
+  esRH      Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+// Firmas digitales de documentos/políticas
+model FirmaDocumento {
+  id          Int      @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  documento   String
+  version     String   @default("1.0")
+  firmado     Boolean  @default(false)
+  firmaHash   String?
+  createdAt   DateTime @default(now())
+
+  @@unique([empleadoId, documento, version])
+}
+
+// Onboarding
+model OnboardingPlantilla {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  tareas    String   @db.Text // JSON array de tareas
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model OnboardingTareaEmpleado {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tarea      String   @db.VarChar(500)
+  completada Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Offboarding
+model Offboarding {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  motivo     String
+  fechaBaja  DateTime
+  notas      String?  @db.Text
+  checklist  String?  @db.Text // JSON
+  completado Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Recuperación de contraseña
+model TokenRecuperacion {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  usado     Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+// Preferencias usuario (tema, idioma)
+model PreferenciaUsuario {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int     @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tema      String  @default("light")
+  idioma    String  @default("es")
+}
+
+// Sesiones activas
+model SesionUsuario {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String?
+  ip        String?
+  userAgent String?  @db.VarChar(500)
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  @@index([usuarioId])
+}
+
+// Log de emails enviados
+model EmailLog {
+  id        Int      @id @default(autoincrement())
+  destino   String
+  asunto    String
+  cuerpo    String   @db.Text
+  enviado   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// Bolsa de horas
+model BolsaHoras {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  horas      Float
+  tipo       String   // EXTRA, CANJE_PERMISO, DEBITO
+  motivo     String?
+  fecha      DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Activos asignados (laptop, celular, etc.)
+model ActivoAsignado {
+  id              Int       @id @default(autoincrement())
+  empleadoId      Int
+  empleado        Empleado  @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  nombre          String
+  serial          String?
+  estado          String    @default("ASIGNADO")
+  fechaAsignacion DateTime  @default(now())
+  fechaDevolucion DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([empleadoId])
+}
+
+// Beneficios (sin nómina)
+model BeneficioEmpleado {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo       String
+  descripcion String?  @db.Text
+  vigenciaHasta DateTime?
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Incapacidades médicas
+model Incapacidad {
+  id          Int      @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo        String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  certificado String?  @db.VarChar(500)
+  estado      String   @default("ACTIVA")
+  notas       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Planeación de plantilla
+model HeadcountPlan {
+  id             Int          @id @default(autoincrement())
+  departamentoId Int
+  departamento   Departamento @relation(fields: [departamentoId], references: [id], onDelete: Cascade)
+  anio           Int
+  mes            Int
+  planeada       Int
+  notas          String?  @db.Text
+  createdAt      DateTime     @default(now())
+
+  @@unique([departamentoId, anio, mes])
+}
+
+// Matriz de competencias
+model Competencia {
+  id          Int                   @id @default(autoincrement())
+  nombre      String                @unique
+  descripcion String?               @db.Text
+  empleados   CompetenciaEmpleado[]
+  createdAt   DateTime              @default(now())
+}
+
+model CompetenciaEmpleado {
+  id            Int         @id @default(autoincrement())
+  empleadoId    Int
+  empleado      Empleado    @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  competenciaId Int
+  competencia   Competencia @relation(fields: [competenciaId], references: [id], onDelete: Cascade)
+  nivel         Int         @default(1)
+  createdAt     DateTime    @default(now())
+
+  @@unique([empleadoId, competenciaId])
+}
+
+// Plan de carrera
+model PlanCarrera {
+  id           Int      @id @default(autoincrement())
+  empleadoId   Int
+  empleado     Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  puestoObjetivo String
+  plazo        String
+  notas        String?  @db.Text
+  estado       String   @default("ACTIVO")
+  createdAt    DateTime @default(now())
+
+  @@index([empleadoId])
+}
+
+// Reconocimientos / Kudos
+model Reconocimiento {
+  id            Int      @id @default(autoincrement())
+  deEmpleadoId  Int
+  deEmpleado    Empleado @relation("KudoEnviado", fields: [deEmpleadoId], references: [id], onDelete: Cascade)
+  aEmpleadoId   Int
+  aEmpleado     Empleado @relation("KudoRecibido", fields: [aEmpleadoId], references: [id], onDelete: Cascade)
+  mensaje       String   @db.Text
+  badge         String   @default("ESTRELLA")
+  createdAt     DateTime @default(now())
+
+  @@index([aEmpleadoId])
+}
+
+// Comunicados internos
+model Comunicado {
+  id         Int      @id @default(autoincrement())
+  titulo     String
+  contenido  String   @db.Text
+  autorId    Int
+  autor      Empleado @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  fijado     Boolean  @default(false)
+  publicado  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Workflows de aprobación configurables
+model WorkflowAprobacion {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  modulo    String
+  niveles   String   @db.Text // JSON array de roles
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// Prima vacacional / aguinaldo informativo (sin nómina)
+model CalculoLaboralInfo {
+  id         Int      @id @default(autoincrement())
+  empleadoId Int      @unique
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  diasVacaciones Int  @default(0)
+  primaVacacionalPct Float @default(25)
+  aguinaldoDias Int   @default(15)
+  notas      String?  @db.Text
+  updatedAt  DateTime @updatedAt
+}
