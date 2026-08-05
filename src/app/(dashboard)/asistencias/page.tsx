@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/use-session";
 import { ASISTENCIA_BADGES } from "@/lib/asistencia-registro";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type AsistenciaRow = {
   id: number;
@@ -53,6 +57,7 @@ export default function AsistenciasPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsDia | null>(null);
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   const cargar = useCallback(() => {
     fetch("/api/asistencias")
@@ -142,7 +147,8 @@ export default function AsistenciasPage() {
   }
 
   async function eliminar(id: number) {
-    if (!confirm("¿Eliminar registro de asistencia?")) return;
+    const ok = await confirm("Eliminar asistencia", "¿Eliminar registro de asistencia?");
+    if (!ok) return;
     const res = await fetch(`/api/asistencias/${id}`, { method: "DELETE" });
     if (res.ok) {
       cargar();
@@ -152,36 +158,32 @@ export default function AsistenciasPage() {
 
   return (
     <div>
-      <header className="page-header">
-        <h1 className="page-title">
-          Control de Asistencias
-        </h1>
-        <p className="page-subtitle">
-          {esConsultor ? "Administración de registros y estadísticas del día" : "Consulta de asistencia"}
-        </p>
-      </header>
+      <PageHeader
+        title="Control de Asistencias"
+        subtitle={esConsultor ? "Administración de registros y estadísticas del día" : "Consulta de registros de entrada y salida"}
+      />
 
       {esConsultor && stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           <div className="card text-center py-4">
-            <p className="text-2xl font-bold text-[#17A589]">{stats.puntuales}</p>
-            <p className="text-xs text-[#7F8C8D]">Puntuales</p>
+            <p className="text-2xl font-bold text-success">{stats.puntuales}</p>
+            <p className="text-xs text-muted">Puntuales</p>
           </div>
           <div className="card text-center py-4">
-            <p className="text-2xl font-bold text-[#E67E22]">{stats.retardos}</p>
-            <p className="text-xs text-[#7F8C8D]">Retardos</p>
+            <p className="text-2xl font-bold text-warning">{stats.retardos}</p>
+            <p className="text-xs text-muted">Retardos</p>
           </div>
           <div className="card text-center py-4">
-            <p className="text-2xl font-bold text-[#E74C3C]">{stats.faltas}</p>
-            <p className="text-xs text-[#7F8C8D]">Faltas</p>
+            <p className="text-2xl font-bold text-danger">{stats.faltas}</p>
+            <p className="text-xs text-muted">Faltas</p>
           </div>
           <div className="card text-center py-4">
-            <p className="text-2xl font-bold text-[#1B4F72]">{stats.pendientes}</p>
-            <p className="text-xs text-[#7F8C8D]">Pendientes por registrar</p>
+            <p className="text-2xl font-bold text-primary">{stats.pendientes}</p>
+            <p className="text-xs text-muted">Pendientes por registrar</p>
           </div>
           <div className="card text-center py-4 col-span-2 md:col-span-1">
-            <p className="text-2xl font-bold text-[#2874A6]">{stats.porcentajeAsistencia}%</p>
-            <p className="text-xs text-[#7F8C8D]">Asistencia del día</p>
+            <p className="text-2xl font-bold text-primary">{stats.porcentajeAsistencia}%</p>
+            <p className="text-xs text-muted">Asistencia del día</p>
           </div>
         </div>
       )}
@@ -235,7 +237,7 @@ export default function AsistenciasPage() {
 
       <div className="hl-table-shell">
         {loading ? (
-          <p className="p-5 text-[var(--color-muted)]">Cargando…</p>
+          <LoadingState label="Cargando asistencias…" compact />
         ) : (
           <div className="hl-table-wrap">
           <table className="hl-table min-w-[720px]">
@@ -253,7 +255,6 @@ export default function AsistenciasPage() {
             </thead>
             <tbody>
               {registros.map((fila) => {
-                const badge = ASISTENCIA_BADGES[fila.estado] || { className: "hl-badge hl-badge-neutral", label: fila.estado };
                 const turno = fila.turnoNombre || fila.empleado.turno?.nombre || "—";
                 return (
                   <tr key={fila.id}>
@@ -264,12 +265,12 @@ export default function AsistenciasPage() {
                     <td className="font-mono text-xs">{fila.horaEntrada || "—"}</td>
                     <td className="font-mono text-xs">{fila.horaSalida || "—"}</td>
                     <td>
-                      <span className={badge.className}>{badge.label}</span>
+                      <StatusBadge estado={fila.estado} />
                     </td>
                     {puedeEditarEliminar && (
                       <td>
-                        <button type="button" className="text-[var(--color-primary-light)] hover:underline mr-2 text-xs" onClick={() => editar(fila)}>Editar</button>
-                        <button type="button" className="text-red-400 hover:underline text-xs" onClick={() => eliminar(fila.id)}>Eliminar</button>
+                        <button type="button" className="link-action mr-2 text-xs" onClick={() => editar(fila)}>Editar</button>
+                        <button type="button" className="link-danger text-xs" onClick={() => eliminar(fila.id)}>Eliminar</button>
                       </td>
                     )}
                     {esConsultor && !puedeEditarEliminar && <td className="text-muted text-xs">Solo lectura</td>}
@@ -286,6 +287,7 @@ export default function AsistenciasPage() {
           </div>
         )}
       </div>
+      {ConfirmDialogHost}
     </div>
   );
 }

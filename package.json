@@ -7,13 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-carga": "tsx prisma/seed-carga.ts",
-    "db:setup": "prisma migrate deploy && tsx prisma/seed.ts",
+    "db:setup": "prisma generate && prisma migrate deploy && tsx prisma/seed.ts",
     "test": "tsx --test tests/lib.test.ts"
   },
   "dependencies": {
@@ -29,6 +30,10 @@
     "react-dom": "^19.1.0",
     "xlsx": "^0.18.5",
     "zod": "^3.25.56"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

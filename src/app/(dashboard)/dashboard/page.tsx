@@ -7,6 +7,7 @@ import {
   Bell, Shield, ArrowUpRight,
 } from "lucide-react";
 import { fetchJson, fetchList } from "@/lib/fetch-client";
+import PageHeader from "@/components/ui/PageHeader";
 
 type Resumen = Record<string, number | string | null>;
 type DeptoRow = { departamento: string; organizacion: string; empleados: number };
@@ -59,17 +60,19 @@ function KpiCard({ k, value, i }: { k: string; value: number | string | null; i:
   return (
     <Link
       href={HREFS[k] || "/dashboard"}
-      className="group rounded-xl p-4 transition-colors"
+      className="group rounded-xl p-4 min-h-[7.5rem] flex flex-col transition-colors"
       style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${color}1f` }}>
           <Icon size={18} style={{ color }} />
         </div>
-        <ArrowUpRight size={16} className="text-[#7F8C8D] opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight size={16} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <p className="text-2xl font-bold leading-none">{value ?? "—"}</p>
-      <p className="text-xs text-[#7F8C8D] mt-1.5">{LABELS[k] || k}</p>
+      <div className="mt-auto">
+        <p className="text-2xl font-bold leading-none">{value ?? "—"}</p>
+        <p className="text-xs text-muted mt-1.5">{LABELS[k] || k}</p>
+      </div>
     </Link>
   );
 }
@@ -135,31 +138,30 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div
-        className="rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4"
-        style={{
-          background:
-            "linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 22%, var(--color-surface)), var(--color-surface))",
-          border: "1px solid var(--color-border)",
-        }}
-      >
-        <div>
-          <p className="text-sm text-[#7F8C8D] capitalize">{hoy}</p>
-          <h1 className="text-2xl font-bold mt-1">{nombre ? `Hola, ${nombre.split(" ")[0]} 👋` : "Dashboard"}</h1>
-          <p className="text-sm text-[#7F8C8D] mt-1">
-            {isEmpleado ? "Tu portal de empleado" : rol === "Supervisor" ? "Panel de supervisor" : "Panel de control · HumanLink SGRH"}
-          </p>
-        </div>
-        <Link href={isEmpleado ? "/perfil" : "/reportes"} className="btn-primary text-sm">
-          {isEmpleado ? "Ver mi perfil" : "Ver reportes"}
-        </Link>
+      <div>
+        <p className="text-sm text-muted capitalize mb-1">{hoy}</p>
+        <PageHeader
+          title={nombre ? `Bienvenido, ${nombre.split(" ")[0]}` : "Inicio"}
+          subtitle={
+            isEmpleado
+              ? "Consulta tu información, solicitudes y actividades del día"
+              : rol === "Supervisor"
+                ? "Supervisión de equipo, aprobaciones y evaluaciones"
+                : "Resumen operativo de recursos humanos"
+          }
+          actions={
+            <Link href={isEmpleado ? "/perfil" : "/reportes"} className="btn-primary text-sm">
+              {isEmpleado ? "Ver mi perfil" : "Ver reportes"}
+            </Link>
+          }
+        />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {kpis.map(([k, v], i) => (
           <KpiCard key={k} k={k} value={v} i={i} />
         ))}
-        {kpis.length === 0 && <p className="text-[#7F8C8D] text-sm col-span-full">Cargando indicadores...</p>}
+        {kpis.length === 0 && <p className="text-muted text-sm col-span-full">Cargando indicadores...</p>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -179,7 +181,7 @@ export default function DashboardPage() {
             <div className="space-y-2.5">
               {deptos.slice(0, 9).map((d, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-36 text-sm truncate text-[#7F8C8D]" title={`${d.organizacion} · ${d.departamento}`}>
+                  <div className="w-36 text-sm truncate text-muted" title={`${d.organizacion} · ${d.departamento}`}>
                     {d.departamento}
                   </div>
                   <div className="flex-1 rounded-full h-6 overflow-hidden" style={{ background: "var(--color-surface-2)" }}>
@@ -219,7 +221,7 @@ export default function DashboardPage() {
           {isAdmin && (
             <div className="rounded-2xl p-5" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
               <h2 className="font-semibold mb-3">Reportes administrativos</h2>
-              <p className="text-sm text-[#7F8C8D] mb-3">Exporta indicadores y listados del personal.</p>
+              <p className="text-sm text-muted mb-3">Exporta indicadores y listados del personal.</p>
               <Link href="/reportes" className="btn-primary text-sm inline-block w-full text-center">
                 Abrir reportes
               </Link>
@@ -258,11 +260,11 @@ export default function DashboardPage() {
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{n.titulo}</p>
-                    <p className="text-xs text-[#7F8C8D] truncate">{n.mensaje}</p>
+                    <p className="text-xs text-muted truncate">{n.mensaje}</p>
                   </div>
                 </div>
               ))}
-              {notifs.length === 0 && <p className="text-sm text-[#7F8C8D]">Sin actividad reciente</p>}
+              {notifs.length === 0 && <p className="text-sm text-muted">Sin actividad reciente</p>}
             </div>
           </div>
         </div>

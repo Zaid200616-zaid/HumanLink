@@ -11,6 +11,10 @@ import Avatar from "@/components/Avatar";
 
 import ExpedienteVacacionesPanel from "@/components/ExpedienteVacacionesPanel";
 import { descargarPdf } from "@/lib/pdf";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { labelEstadoQueja } from "@/lib/schemas/queja";
 
 
 
@@ -30,7 +34,7 @@ export default function ExpedientePage() {
 
 
 
-  if (!emp) return <p>Cargando expediente...</p>;
+  if (!emp) return <LoadingState label="Cargando expediente…" />;
 
 
 
@@ -174,7 +178,7 @@ export default function ExpedientePage() {
 
     <div>
 
-      <Link href="/empleados" className="text-[#2874A6] text-sm hover:underline mb-4 inline-block">
+      <Link href="/empleados" className="link-action text-sm mb-4 inline-block">
 
         ← Volver a empleados
 
@@ -182,36 +186,19 @@ export default function ExpedientePage() {
 
 
 
-      <div className="mb-8 flex items-center justify-between gap-4 flex-wrap">
-
-        <div className="flex items-center gap-4">
-
-          <Avatar nombre={empleado.nombre} apellido={empleado.apellidoPaterno} fotoUrl={empleado.fotoUrl} size="xl" />
-
-          <div>
-
-            <h1 className="page-title">
-
-              Expediente Digital · RF-H09
-
-            </h1>
-
-            <p className="text-[#7F8C8D]">
-
-              {empleado.nombre} {empleado.apellidoPaterno} {empleado.apellidoMaterno || ""}
-
-            </p>
-
-          </div>
-
+      <div className="mb-8 flex items-start gap-4 flex-wrap">
+        <Avatar nombre={empleado.nombre} apellido={empleado.apellidoPaterno} fotoUrl={empleado.fotoUrl} size="xl" />
+        <div className="flex-1 min-w-0">
+          <PageHeader
+            title="Expediente digital"
+            subtitle={`${empleado.nombre} ${empleado.apellidoPaterno} ${empleado.apellidoMaterno || ""}`}
+            actions={
+              <button onClick={descargarExpediente} className="btn-primary flex items-center gap-2 text-sm" type="button">
+                <FileText size={16} aria-hidden /> Descargar PDF
+              </button>
+            }
+          />
         </div>
-
-        <button onClick={descargarExpediente} className="btn-primary flex items-center gap-2 text-sm">
-
-          <FileText size={16} /> Descargar PDF
-
-        </button>
-
       </div>
 
 
@@ -234,27 +221,27 @@ export default function ExpedientePage() {
 
           <dl className="space-y-2 text-sm">
 
-            <div><dt className="text-[#7F8C8D]">No. Empleado</dt><dd className="font-medium">{empleado.numeroEmpleado}</dd></div>
+            <div><dt className="text-muted">No. Empleado</dt><dd className="font-medium">{empleado.numeroEmpleado}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Puesto</dt><dd>{empleado.puesto}</dd></div>
+            <div><dt className="text-muted">Puesto</dt><dd>{empleado.puesto}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Email</dt><dd>{empleado.email}</dd></div>
+            <div><dt className="text-muted">Email</dt><dd>{empleado.email}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">CURP</dt><dd className="font-mono text-xs">{empleado.curp || "-"}</dd></div>
+            <div><dt className="text-muted">CURP</dt><dd className="font-mono text-xs">{empleado.curp || "-"}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">RFC</dt><dd className="font-mono text-xs">{empleado.rfc || "-"}</dd></div>
+            <div><dt className="text-muted">RFC</dt><dd className="font-mono text-xs">{empleado.rfc || "-"}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Teléfono</dt><dd>{empleado.telefono || "-"}</dd></div>
+            <div><dt className="text-muted">Teléfono</dt><dd>{empleado.telefono || "-"}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Fecha ingreso</dt><dd>{new Date(empleado.fechaIngreso).toLocaleDateString("es-MX")}</dd></div>
+            <div><dt className="text-muted">Fecha ingreso</dt><dd>{new Date(empleado.fechaIngreso).toLocaleDateString("es-MX")}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Departamento</dt><dd>{empleado.departamento?.nombre || "-"}</dd></div>
+            <div><dt className="text-muted">Departamento</dt><dd>{empleado.departamento?.nombre || "-"}</dd></div>
 
-            <div><dt className="text-[#7F8C8D]">Organización</dt><dd>{empleado.departamento?.organizacion.nombre || "-"}</dd></div>
+            <div><dt className="text-muted">Organización</dt><dd>{empleado.departamento?.organizacion.nombre || "-"}</dd></div>
 
             {empleado.turno && (
 
-              <div><dt className="text-[#7F8C8D]">Turno</dt><dd>{empleado.turno.nombre} ({empleado.turno.horaInicio}-{empleado.turno.horaFin})</dd></div>
+              <div><dt className="text-muted">Turno</dt><dd>{empleado.turno.nombre} ({empleado.turno.horaInicio}-{empleado.turno.horaFin})</dd></div>
 
             )}
 
@@ -272,15 +259,15 @@ export default function ExpedientePage() {
 
             {empleado.solicitudes?.length ? empleado.solicitudes.map((s, i) => (
 
-              <div key={i} className="p-2 bg-[#F4F6F7] rounded mb-2 text-sm flex justify-between">
+              <div key={i} className="p-2 bg-[var(--color-surface-2)] rounded mb-2 text-sm flex justify-between">
 
                 <span>{s.tipo} · {new Date(s.fechaInicio).toLocaleDateString("es-MX")} – {new Date(s.fechaFin).toLocaleDateString("es-MX")} ({s.diasSolicitados} días)</span>
 
-                <span className={`text-xs font-medium ${s.estado === "APROBADA" ? "text-green-600" : s.estado === "RECHAZADA" ? "text-red-600" : "text-yellow-600"}`}>{s.estado}</span>
+                <StatusBadge estado={s.estado} />
 
               </div>
 
-            )) : <p className="text-sm text-[#7F8C8D]">Sin solicitudes</p>}
+            )) : <p className="text-sm text-muted">Sin solicitudes</p>}
 
           </section>
 
@@ -292,13 +279,13 @@ export default function ExpedientePage() {
 
             {empleado.capacitaciones?.length ? empleado.capacitaciones.map((c, i) => (
 
-              <div key={i} className="p-2 bg-[#F4F6F7] rounded mb-2 text-sm">
+              <div key={i} className="p-2 bg-[var(--color-surface-2)] rounded mb-2 text-sm">
 
-                {c.capacitacion.nombre} · <span className="text-[#17A589]">{c.estado}</span>
+                {c.capacitacion.nombre} · <StatusBadge estado={c.estado} />
 
               </div>
 
-            )) : <p className="text-sm text-[#7F8C8D]">Sin capacitaciones</p>}
+            )) : <p className="text-sm text-muted">Sin capacitaciones</p>}
 
           </section>
 
@@ -310,11 +297,11 @@ export default function ExpedientePage() {
 
             {empleado.evaluaciones?.map((ev, i) => (
 
-              <div key={i} className="p-3 bg-[#F4F6F7] rounded mb-2 text-sm">
+              <div key={i} className="p-3 bg-[var(--color-surface-2)] rounded mb-2 text-sm">
 
                 <p className="font-medium">{ev.periodo} {ev.puntaje ? `· ${ev.puntaje}/100` : ""}</p>
 
-                <p className="text-[#7F8C8D]">{ev.comentarios}</p>
+                <p className="text-muted">{ev.comentarios}</p>
 
               </div>
 
@@ -325,7 +312,7 @@ export default function ExpedientePage() {
 
 
           <section>
-            <h2 className="font-semibold mb-3">Documentos laborales (RF-H18)</h2>
+            <h2 className="font-semibold mb-3">Documentos laborales</h2>
             {empleado.documentos?.length ? (
               <div className="hl-table-shell">
                 <div className="hl-table-wrap">
@@ -347,8 +334,8 @@ export default function ExpedientePage() {
                         <td className="whitespace-nowrap">{new Date(d.createdAt).toLocaleDateString("es-MX")}</td>
                         <td>{d.activo ? "Activo" : "Inactivo"}</td>
                         <td className="px-3 py-2">
-                          <a href={d.rutaArchivo} target="_blank" rel="noopener noreferrer" className="text-[#2874A6] hover:underline mr-2">Ver</a>
-                          <a href={d.rutaArchivo} download className="text-[#2874A6] hover:underline">Descargar</a>
+                          <a href={d.rutaArchivo} target="_blank" rel="noopener noreferrer" className="link-action mr-2">Ver</a>
+                          <a href={d.rutaArchivo} download className="link-action">Descargar</a>
                         </td>
                       </tr>
                     ))}
@@ -357,7 +344,7 @@ export default function ExpedientePage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-[#7F8C8D]">Sin documentos registrados</p>
+              <p className="text-sm text-muted">Sin documentos registrados</p>
             )}
           </section>
 
@@ -371,7 +358,7 @@ export default function ExpedientePage() {
 
               {empleado.quejas.map((q, i) => (
 
-                <div key={i} className="text-sm p-2 bg-[#F4F6F7] rounded mb-2">{q.asunto} · {q.estado}</div>
+                <div key={i} className="text-sm p-2 bg-[var(--color-surface-2)] rounded mb-2">{q.asunto} · {labelEstadoQueja(String(q.estado))}</div>
 
               ))}
 

@@ -44,14 +44,21 @@ export async function GET(request: NextRequest) {
 
   if (session!.rol === "Empleado" && session!.empleadoId) {
     where.empleadoId = session!.empleadoId;
-  } else if (session!.rol === "Supervisor" && session!.empleadoId && vista === "equipo") {
+  } else if (session!.rol === "Supervisor" && session!.empleadoId) {
     const depts = await prisma.departamento.findMany({
       where: { supervisorId: session!.empleadoId },
       select: { id: true },
     });
-    where.empleado = { departamentoId: { in: depts.map((d) => d.id) } };
-    where.aprobacionSupervisor = "PENDIENTE";
-    where.estado = "PENDIENTE";
+    const deptIds = depts.map((d) => d.id);
+    if (deptIds.length === 0) {
+      where.empleadoId = -1;
+    } else {
+      where.empleado = { departamentoId: { in: deptIds } };
+    }
+    if (vista === "equipo") {
+      where.aprobacionSupervisor = "PENDIENTE";
+      where.estado = "PENDIENTE";
+    }
   }
 
   const solicitudes = await prisma.solicitudPermiso.findMany({

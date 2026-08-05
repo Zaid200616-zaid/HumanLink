@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/use-session";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import { resolveEstadoBadge } from "@/lib/estado-badge";
 
 type Resultados = {
   empleados: Array<{ id: number; nombre: string; apellidoPaterno: string; puesto: string; numeroEmpleado: string }>;
@@ -49,7 +52,7 @@ export default function BuscarPage() {
     return () => clearTimeout(t);
   }, [q]);
 
-  if (sessionLoading) return <p className="text-muted">Cargando…</p>;
+  if (sessionLoading) return <LoadingState />;
 
   const total =
     resultados.empleados.length +
@@ -60,10 +63,10 @@ export default function BuscarPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="page-title">Búsqueda de personal</h1>
-        <p className="page-subtitle">Empleados, departamentos, vacantes, candidatos y documentos</p>
-      </div>
+      <PageHeader
+        title="Búsqueda de personal"
+        subtitle="Empleados, departamentos, vacantes, candidatos y documentos"
+      />
 
       <div className="card mb-6">
         <label className="label-field" htmlFor="buscar-q">
@@ -125,7 +128,7 @@ export default function BuscarPage() {
             {resultados.vacantes.map((v) => (
               <li key={v.id}>
                 <Link href="/vacantes" className="text-primary-light hover:underline">
-                  {v.titulo} · {v.estado}
+                  {v.titulo} · {resolveEstadoBadge(v.estado).label}
                 </Link>
               </li>
             ))}
@@ -140,7 +143,7 @@ export default function BuscarPage() {
             {resultados.candidatos.map((c) => (
               <li key={c.id}>
                 <Link href="/candidatos" className="text-primary-light hover:underline">
-                  {c.nombre} {c.apellidoPaterno} · {c.etapa}
+                  {c.nombre} {c.apellidoPaterno} · {resolveEstadoBadge(c.etapa).label}
                 </Link>
               </li>
             ))}

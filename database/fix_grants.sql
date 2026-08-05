@@ -1,5 +1,5 @@
--- Crear base de datos y usuario para HumanLink (MySQL 8+)
--- Ejecutar como root: mysql -u root -p < database/setup_mysql.sql
+-- Reparar permisos del usuario humanlink (ejecutar como root)
+-- XAMPP / Windows: C:\xampp\mysql\bin\mysql.exe -u root < database\fix_grants.sql
 
 CREATE DATABASE IF NOT EXISTS humanlink
   CHARACTER SET utf8mb4

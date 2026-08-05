@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { notifySessionRefresh } from "@/components/SessionUserIndicator";
+import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import PageHeader from "@/components/ui/PageHeader";
 
 type UsuarioRow = {
   id: number;
@@ -14,9 +17,9 @@ type RolOpt = { id: number; nombre: string };
 
 /** RF-H07 — Asignación de roles (sin matriz de permisos por rol). */
 export default function PermisosRolPage() {
+  const { showSuccess, showError, showWarning } = useToast();
   const [usuarios, setUsuarios] = useState<UsuarioRow[]>([]);
   const [roles, setRoles] = useState<RolOpt[]>([]);
-  const [msg, setMsg] = useState("");
 
   function cargar() {
     fetch("/api/usuarios/roles").then((r) => r.json()).then(setUsuarios);
@@ -30,7 +33,7 @@ export default function PermisosRolPage() {
   async function asignar(usuarioId: number, rolId: number) {
     const rol = roles.find((r) => r.id === rolId);
     if (rol?.nombre === "Administrador") {
-      setMsg("No se puede asignar el rol Administrador a otro usuario");
+      showWarning("No se puede asignar el rol Administrador a otro usuario.");
       return;
     }
     const res = await fetch("/api/usuarios/roles", {
@@ -39,23 +42,21 @@ export default function PermisosRolPage() {
       body: JSON.stringify({ usuarioId, rolId }),
     });
     const d = await res.json();
-    setMsg(res.ok ? "Rol actualizado" : d.error || "Error");
     if (res.ok) {
+      showSuccess(MSG.rolActualizado);
       cargar();
       notifySessionRefresh();
+    } else {
+      showError(d.error || MSG.errorGenerico);
     }
   }
 
   return (
     <div>
-      <h1 className="page-title mb-2">
-        Administración de roles
-      </h1>
-      <p className="text-[#7F8C8D] mb-6">
-        RF-H07 · Asignar roles (no se puede otorgar Administrador a otra persona).
-      </p>
-
-      {msg && <p className="text-sm text-[#17A589] mb-4">{msg}</p>}
+      <PageHeader
+        title="Administración de roles"
+        subtitle="Asignación de roles de usuario en la plataforma"
+      />
 
       <div className="hl-table-shell">
         <div className="hl-table-wrap">
@@ -80,7 +81,7 @@ export default function PermisosRolPage() {
                   <td>{u.rol.nombre}</td>
                   <td>
                     {esAdmin ? (
-                      <span className="text-xs text-[#7F8C8D]">Protegido</span>
+                      <span className="text-xs text-muted">Protegido</span>
                     ) : (
                       <select
                         className="input-field text-xs py-1"

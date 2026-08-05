@@ -80,12 +80,12 @@ export default function PostularPage() {
           <Link href="/" className="inline-flex justify-center mb-3">
             <BrandLogo />
           </Link>
-          <p style={{ color: "var(--color-muted)" }}>Registro público · Postulación a vacantes disponibles</p>
+          <p style={{ color: "var(--color-muted)" }}>Portal de postulación a vacantes · HumanLink</p>
         </div>
 
         {vacantes.length === 0 ? (
           <div className="card text-center">
-            <p className="text-[#7F8C8D]">No hay vacantes disponibles en este momento.</p>
+            <p className="text-muted">No hay vacantes disponibles en este momento.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="card space-y-4">
@@ -103,28 +103,28 @@ export default function PostularPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label-field">Nombre *</label>
-                <input className="input-field w-full" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
+                <input className="input-field w-full" placeholder="Ingrese su nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
               </div>
               <div>
                 <label className="label-field">Apellidos *</label>
-                <input className="input-field w-full" placeholder="Paterno" value={form.apellidoPaterno} onChange={(e) => setForm({ ...form, apellidoPaterno: e.target.value })} required />
+                <input className="input-field w-full" placeholder="Ingrese su apellido paterno" value={form.apellidoPaterno} onChange={(e) => setForm({ ...form, apellidoPaterno: e.target.value })} required />
               </div>
             </div>
             <div>
               <label className="label-field">Apellido materno</label>
-              <input className="input-field w-full" value={form.apellidoMaterno} onChange={(e) => setForm({ ...form, apellidoMaterno: e.target.value })} />
+              <input className="input-field w-full" placeholder="Ingrese su apellido materno (opcional)" value={form.apellidoMaterno} onChange={(e) => setForm({ ...form, apellidoMaterno: e.target.value })} />
             </div>
             <div>
               <label className="label-field">Correo electrónico *</label>
-              <input type="email" className="input-field w-full" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <input type="email" className="input-field w-full" placeholder="Ingrese su correo electrónico" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             </div>
             <div>
               <label className="label-field">Teléfono</label>
-              <input className="input-field w-full" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
+              <input className="input-field w-full" placeholder="Ingrese su teléfono de contacto" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
             </div>
             <div>
               <label className="label-field">CURP (opcional)</label>
-              <input className="input-field w-full" value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} maxLength={18} />
+              <input className="input-field w-full" placeholder="Ingrese su CURP (18 caracteres)" value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} maxLength={18} />
             </div>
             <div>
               <label className="label-field">Currículum (PDF)</label>

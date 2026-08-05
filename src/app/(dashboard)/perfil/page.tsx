@@ -6,6 +6,9 @@ import { useSession } from "@/lib/use-session";
 import { notifySessionRefresh } from "@/components/SessionUserIndicator";
 import Avatar from "@/components/Avatar";
 import { Camera } from "lucide-react";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import { formatDateTime } from "@/lib/format-date";
 
 type PerfilData = {
   id: number;
@@ -97,16 +100,14 @@ export default function PerfilPage() {
     if (res.ok) notifySessionRefresh();
   }
 
-  if (!perfil) return <p>Cargando perfil...</p>;
+  if (!perfil) return <LoadingState label="Cargando perfil…" />;
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="page-title">
-          Mi Perfil
-        </h1>
-        <p className="text-[#7F8C8D]">RF-H14 · Número de empleado y foto de perfil</p>
-      </div>
+      <PageHeader
+        title="Mi Perfil"
+        subtitle="Tu información personal, foto de perfil y seguridad de cuenta"
+      />
 
       <div className="card max-w-lg mb-6">
         <h2 className="font-semibold mb-4">Foto de perfil</h2>
@@ -125,7 +126,7 @@ export default function PerfilPage() {
               disabled={subiendoFoto || !empleado}
               onClick={() => inputFotoRef.current?.click()}
             >
-              <Camera size={14} className="text-[#7F8C8D]" />
+              <Camera size={14} className="text-muted" />
             </button>
           </div>
           <div className="flex-1 space-y-2">
@@ -145,12 +146,12 @@ export default function PerfilPage() {
               {subiendoFoto ? "Subiendo…" : "Elegir y subir imagen"}
             </button>
             {!empleado && (
-              <p className="text-xs text-[#7F8C8D]">
+              <p className="text-xs text-muted">
                 Vincule un expediente de empleado a su cuenta para guardar la foto.
               </p>
             )}
             {empleado && (
-              <p className="text-xs text-[#7F8C8D]">JPG o PNG, máximo 500 KB. La foto se guarda al seleccionar el archivo.</p>
+              <p className="text-xs text-muted">JPG o PNG, máximo 500 KB. La foto se guarda al seleccionar el archivo.</p>
             )}
           </div>
         </div>
@@ -162,17 +163,17 @@ export default function PerfilPage() {
             <h2 className="text-xl font-semibold">
               {empleado.nombre} {empleado.apellidoPaterno}
             </h2>
-            <p className="text-[#7F8C8D]">{empleado.puesto}</p>
+            <p className="text-muted">{empleado.puesto}</p>
             {empleado.departamento && (
               <p className="text-sm mt-1">
                 {empleado.departamento.organizacion.nombre} · {empleado.departamento.nombre}
               </p>
             )}
             <div className="flex gap-4 mt-3">
-              <Link href={`/empleados/${empleado.id}`} className="text-sm text-[#2874A6] hover:underline">
+              <Link href={`/empleados/${empleado.id}`} className="text-sm link-action hover:underline">
                 Ver expediente digital →
               </Link>
-              <Link href="/vacaciones" className="text-sm text-[#17A589] hover:underline">
+              <Link href="/vacaciones" className="text-sm text-success hover:underline">
                 Mi expediente de vacaciones →
               </Link>
             </div>
@@ -183,12 +184,12 @@ export default function PerfilPage() {
           <div>
             <label className="label-field">Número de empleado</label>
             <input
-              className="input-field bg-[#F4F6F7] font-mono"
+              className="input-field font-mono opacity-80"
               value={numeroEmpleado || "No asignado"}
               readOnly
               disabled
             />
-            <p className="text-xs text-[#7F8C8D] mt-1">Dato informativo; no editable.</p>
+            <p className="text-xs text-muted mt-1">Dato informativo; no editable.</p>
           </div>
           <div>
             <label className="label-field">Email</label>
@@ -205,7 +206,7 @@ export default function PerfilPage() {
           {msg && (
             <p
               className={`text-sm ${
-                msg.includes("Error") || msg.includes("500") || msg.includes("No se") ? "text-red-600" : "text-[#17A589]"
+                msg.includes("Error") || msg.includes("500") || msg.includes("No se") ? "text-danger" : "text-success"
               }`}
             >
               {msg}
@@ -253,12 +254,12 @@ function PasswordForm() {
   return (
     <form onSubmit={cambiar} className="space-y-2 border-t pt-4">
       <p className="text-sm font-medium">Cambiar contraseña</p>
-      <input type="password" className="input-field" placeholder="Actual" value={actual} onChange={(e) => setActual(e.target.value)} />
-      <input type="password" className="input-field" placeholder="Nueva (min 8)" value={nueva} onChange={(e) => setNueva(e.target.value)} minLength={8} />
+      <input type="password" className="input-field" placeholder="Contraseña actual" value={actual} onChange={(e) => setActual(e.target.value)} />
+      <input type="password" className="input-field" placeholder="Nueva contraseña (mínimo 8 caracteres)" value={nueva} onChange={(e) => setNueva(e.target.value)} minLength={8} />
       <button type="submit" className="btn-secondary text-sm">
         Actualizar contraseña
       </button>
-      {msg && <p className="text-xs text-[#17A589]">{msg}</p>}
+      {msg && <p className="text-xs text-success">{msg}</p>}
     </form>
   );
 }
@@ -272,10 +273,10 @@ function SesionesActivas() {
   return (
     <div className="border-t pt-4">
       <p className="text-sm font-medium mb-2">Sesiones activas ({sesiones.length})</p>
-      <ul className="text-xs space-y-1 text-[#7F8C8D]">
+      <ul className="text-xs space-y-1 text-muted">
         {sesiones.map((s) => (
           <li key={s.id}>
-            {s.ip} · {new Date(s.createdAt).toLocaleString("es-MX")}
+            {s.ip} · {formatDateTime(s.createdAt)}
           </li>
         ))}
       </ul>

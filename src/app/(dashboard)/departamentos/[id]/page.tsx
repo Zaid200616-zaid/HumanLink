@@ -5,6 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "@/lib/use-session";
 import { MSG_DEPT_SIN_AUTORIZACION } from "@/lib/departamentos-auth";
+import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import ActivoBadge from "@/components/ui/ActivoBadge";
+import PageHeader from "@/components/ui/PageHeader";
+import { resolveEstadoBadge } from "@/lib/estado-badge";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type EmpleadoRow = { id: number; nombre: string; apellidoPaterno: string; numeroEmpleado: string; puesto: string };
 type VacanteRow = {
@@ -37,6 +44,8 @@ type Meta = {
 export default function AdministrarDepartamentoPage() {
   const { id } = useParams();
   const { user } = useSession();
+  const { showError, showSuccess, showWarning } = useToast();
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
   const puedeEscribir = user?.rol === "Administrador" || user?.rol === "Supervisor";
   const puedeListarVacantes = user?.rol === "Administrador" || user?.rol === "Recursos Humanos";
   const deptId = Number(id);
@@ -96,13 +105,18 @@ export default function AdministrarDepartamentoPage() {
     });
     if (res.ok) {
       setEmpAsignar("");
-      setMsg("Empleado asignado");
+      setMsg("");
+      showSuccess(MSG.empleadoAsignado);
       cargar();
+    } else {
+      const d = await res.json();
+      showError(d.error || MSG.errorGenerico);
     }
   }
 
   async function removerEmpleado(empleadoId: number) {
-    if (!confirm("¿Remover empleado de este departamento?")) return;
+    const ok = await confirm("Remover empleado", "¿Remover empleado de este departamento?");
+    if (!ok) return;
     const res = await fetch(`/api/departamentos/${deptId}/empleados`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -118,14 +132,18 @@ export default function AdministrarDepartamentoPage() {
       body: JSON.stringify({ supervisorId: supervisorId ? Number(supervisorId) : null }),
     });
     if (res.ok) {
-      setMsg("Supervisor actualizado");
+      setMsg("");
+      showSuccess(MSG.supervisorActualizado);
       cargar();
+    } else {
+      const d = await res.json();
+      showError(d.error || MSG.errorGenerico);
     }
   }
 
   async function crearVacante() {
     if (!vacTitulo.trim() || vacDesc.trim().length < 10) {
-      setMsg("Complete título y descripción (mín. 10 caracteres)");
+      showWarning("Complete título y descripción (mínimo 10 caracteres).");
       return;
     }
     const res = await fetch(`/api/departamentos/${deptId}/vacantes`, {
@@ -140,14 +158,13 @@ export default function AdministrarDepartamentoPage() {
     });
     const d = await res.json();
     if (!res.ok) {
-      setMsg(d.error || "No se pudo crear la vacante");
+      showError(d.error || MSG.errorGenerico);
       return;
     }
-    if (res.ok) {
-      setVacTitulo("");
-      setVacDesc("");
-      cargar();
-    }
+    setVacTitulo("");
+    setVacDesc("");
+    showSuccess(MSG.creado);
+    cargar();
   }
 
   async function asociarVacante() {
@@ -167,18 +184,22 @@ export default function AdministrarDepartamentoPage() {
   }
 
   async function desasociarVacante(vacanteId: number) {
-    if (!confirm("¿Eliminar asociación de esta vacante?")) return;
+    const ok = await confirm("Desasociar vacante", "¿Eliminar asociación de esta vacante?");
+    if (!ok) return;
     const res = await fetch(`/api/departamentos/${deptId}/vacantes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accion: "desasociar", vacanteId }),
     });
     const d = await res.json();
-    if (!res.ok) alert(d.error || "Error");
-    else cargar();
+    if (!res.ok) showError(d.error || MSG.errorGenerico);
+    else {
+      showSuccess(MSG.actualizado);
+      cargar();
+    }
   }
 
-  if (!dept) return <p className="text-[#7F8C8D]">Cargando departamento…</p>;
+  if (!dept) return <LoadingState label="Cargando departamento…" />;
 
   const vacantesRegistradas = dept._count.vacantes;
   const limiteDept = dept.cantidadVacantes;
@@ -187,17 +208,15 @@ export default function AdministrarDepartamentoPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/departamentos" className="text-sm text-[#2874A6] hover:underline">← Volver a departamentos</Link>
+      <Link href="/departamentos" className="text-sm link-action hover:underline">← Volver a departamentos</Link>
 
       <div>
-        <h1 className="page-title">
-          Administrar Departamento
-        </h1>
+        <PageHeader title="Administrar departamento" subtitle="Personal, vacantes y supervisor del área" />
         <p className="text-lg mt-1">{dept.nombre}</p>
-        <p className="text-sm text-[#7F8C8D]">
+        <p className="text-sm text-muted">
           {dept.organizacion.nombre} · {dept._count.empleados} empleados · {dept._count.vacantes} vacantes
           {dept.cantidadVacantes > 0 ? ` (máx. ${dept.cantidadVacantes})` : ""} ·{" "}
-          {dept.activo ? "Activo" : "Inactivo"}
+          <ActivoBadge activo={dept.activo} />
         </p>
         {msg && <p className="text-sm mt-2" style={{ color: "var(--color-secondary)" }}>{msg}</p>}
         {!puedeEscribir && user && (
@@ -229,12 +248,12 @@ export default function AdministrarDepartamentoPage() {
           {dept.empleados.map((e) => (
             <li key={e.id} className="py-2 flex justify-between gap-2">
               <span>{e.nombre} {e.apellidoPaterno} · {e.puesto} ({e.numeroEmpleado})</span>
-              <button type="button" className="text-red-600 text-xs hover:underline" onClick={() => removerEmpleado(e.id)}>
+              <button type="button" className="link-danger text-xs hover:underline" onClick={() => removerEmpleado(e.id)}>
                 Remover
               </button>
             </li>
           ))}
-          {dept.empleados.length === 0 && <li className="py-2 text-[#7F8C8D]">Sin empleados asignados</li>}
+          {dept.empleados.length === 0 && <li className="py-2 text-muted">Sin empleados asignados</li>}
         </ul>
       </section>
 
@@ -254,20 +273,20 @@ export default function AdministrarDepartamentoPage() {
                 </span>
                 {" "}de {limiteDept} permitidos por departamento
               </p>
-              <p className="text-[#7F8C8D] mt-1">
+              <p className="text-muted mt-1">
                 Vacantes registradas: {vacantesRegistradas} · Cálculo: {limiteDept} − {vacantesRegistradas} = {espaciosDisponibles} libre(s)
               </p>
             </>
           ) : (
-            <p className="text-[#7F8C8D]">
+            <p className="text-muted">
               Sin límite de vacantes en departamento · Registradas: {vacantesRegistradas}
             </p>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input className="input-field" placeholder="Título nueva vacante" value={vacTitulo} onChange={(e) => setVacTitulo(e.target.value)} />
-          <input className="input-field" placeholder="Descripción (mín. 10 caracteres)" value={vacDesc} onChange={(e) => setVacDesc(e.target.value)} />
+          <input className="input-field" placeholder="Título del puesto vacante" value={vacTitulo} onChange={(e) => setVacTitulo(e.target.value)} />
+          <input className="input-field" placeholder="Descripción del puesto y responsabilidades" value={vacDesc} onChange={(e) => setVacDesc(e.target.value)} />
         </div>
         <button
           type="button"
@@ -278,7 +297,7 @@ export default function AdministrarDepartamentoPage() {
           Crear vacante
         </button>
         {limiteDept > 0 && espaciosDisponibles === 0 && (
-          <p className="text-xs text-red-600">No hay espacios disponibles. Aumente la cantidad máxima al editar el departamento.</p>
+          <p className="text-xs link-danger">No hay espacios disponibles. Aumente la cantidad máxima al editar el departamento.</p>
         )}
 
         {puedeListarVacantes && (
@@ -302,14 +321,14 @@ export default function AdministrarDepartamentoPage() {
           {dept.vacantes.map((v) => (
             <li key={v.id} className="py-2 flex justify-between gap-2 flex-wrap">
               <span>
-                {v.titulo} · {v.estado} · Cupo {v.cupoDisponible}/{v.cupoTotal} · {v._count.candidatos} candidato(s)
+                {v.titulo} · {resolveEstadoBadge(v.estado).label} · Cupo {v.cupoDisponible}/{v.cupoTotal} · {v._count.candidatos} candidato(s)
               </span>
-              <button type="button" className="text-red-600 text-xs hover:underline" onClick={() => desasociarVacante(v.id)}>
+              <button type="button" className="link-danger text-xs hover:underline" onClick={() => desasociarVacante(v.id)}>
                 Eliminar asociación
               </button>
             </li>
           ))}
-          {dept.vacantes.length === 0 && <li className="py-2 text-[#7F8C8D]">Sin vacantes</li>}
+          {dept.vacantes.length === 0 && <li className="py-2 text-muted">Sin vacantes</li>}
         </ul>
       </section>
 
@@ -327,7 +346,7 @@ export default function AdministrarDepartamentoPage() {
       </section>
       </>
       ) : (
-        <section className="rounded-xl p-5 text-sm text-[#7F8C8D]" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+        <section className="rounded-xl p-5 text-sm text-muted" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
           <p>Empleados asignados: {dept.empleados.length}. Vacantes: {dept._count.vacantes}. Use una cuenta con permisos de escritura para administrar.</p>
           <ul className="mt-3 divide-y" style={{ borderColor: "var(--color-border)" }}>
             {dept.empleados.map((e) => (
@@ -336,6 +355,7 @@ export default function AdministrarDepartamentoPage() {
           </ul>
         </section>
       )}
+      {ConfirmDialogHost}
     </div>
   );
 }

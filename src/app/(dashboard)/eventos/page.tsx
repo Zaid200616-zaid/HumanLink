@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { fetchList } from "@/lib/fetch-client";
 import { useSession } from "@/lib/use-session";
 import { Users, UserCheck, UserX, Clock } from "lucide-react";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { formatDateTime } from "@/lib/format-date";
+import { resolveEstadoBadge } from "@/lib/estado-badge";
 
 interface Evento {
   id: number;
@@ -30,6 +36,7 @@ export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [form, setForm] = useState(emptyEvento);
   const [msg, setMsg] = useState("");
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   function cargar() {
     fetchList<Evento>("/api/eventos").then(setEventos);
@@ -52,7 +59,11 @@ export default function EventosPage() {
   }
 
   async function darDeBaja(eventoId: number) {
-    if (!confirm("¿Dar de baja este evento? Quedará inactivo sin eliminar el registro.")) return;
+    const ok = await confirm(
+      "Dar de baja evento",
+      "¿Dar de baja este evento? Quedará inactivo sin eliminar el registro."
+    );
+    if (!ok) return;
     const res = await fetch(`/api/eventos/${eventoId}`, { method: "PATCH" });
     if (res.ok) cargar();
   }
@@ -74,18 +85,18 @@ export default function EventosPage() {
     }
   }
 
-  if (sessionLoading) return <p>Cargando...</p>;
+  if (sessionLoading) return <LoadingState />;
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="page-title">Eventos Organizacionales</h1>
-        <p className="text-[#7F8C8D]">RF-H17 · RNF-PE01 Resumen numérico de asistencia</p>
-      </div>
+      <PageHeader
+        title="Eventos Organizacionales"
+        subtitle="Convocatorias, confirmación de asistencia y resumen de participación"
+      />
 
       {canManage && (
         <form onSubmit={crearEvento} className="card mb-6 space-y-4">
-          <h2 className="font-semibold text-[#1B4F72]">Crear evento</h2>
+          <h2 className="font-semibold">Crear evento</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label-field">Título</label>
@@ -113,27 +124,27 @@ export default function EventosPage() {
               onChange={(e) => setForm({ ...form, inscripcionAbierta: e.target.checked })} />
             Permitir que empleados se inscriban libremente
           </label>
-          {msg && <p className="text-[#17A589] text-sm">{msg}</p>}
+          {msg && <p className="text-success text-sm">{msg}</p>}
           <button type="submit" className="btn-primary">Publicar evento</button>
         </form>
       )}
 
       {eventos.length === 0 ? (
-        <div className="card text-center text-[#7F8C8D]">No hay eventos programados</div>
+        <div className="card text-center text-muted">No hay eventos programados</div>
       ) : (
         eventos.map((e) => (
           <div key={e.id} className="card mb-6">
             <div className="flex flex-wrap justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-[#1B4F72]">{e.titulo}</h2>
-                {e.descripcion && <p className="text-sm text-[#7F8C8D] mt-1">{e.descripcion}</p>}
+                <h2 className="text-lg font-semibold">{e.titulo}</h2>
+                {e.descripcion && <p className="text-sm text-muted mt-1">{e.descripcion}</p>}
                 <p className="text-sm mt-2">
-                  {new Date(e.fecha).toLocaleString("es-MX")}
+                  {formatDateTime(e.fecha)}
                   {e.ubicacion && ` · ${e.ubicacion}`}
                 </p>
                 {e.inscripcionAbierta && (
-                  <span className="inline-block mt-2 text-xs bg-[#D5F5E3] text-[#17A589] px-2 py-1 rounded-full">
-                    Inscripción abierta
+                  <span className="inline-block mt-2">
+                    <StatusBadge estado="ABIERTO" label="Inscripción abierta" />
                   </span>
                 )}
               </div>
@@ -147,7 +158,7 @@ export default function EventosPage() {
                         e.miRespuesta.respuesta === "RECHAZADO" ? "bg-red-100 text-red-700" :
                         "bg-yellow-100 text-yellow-700"
                       }`}>
-                        Tu respuesta: {e.miRespuesta.respuesta}
+                        Tu respuesta: {resolveEstadoBadge(e.miRespuesta.respuesta).label}
                       </span>
                       <div className="flex gap-2">
                         <button onClick={() => responder(e.id, "CONFIRMADO")} className="btn-secondary text-sm py-1">
@@ -168,7 +179,7 @@ export default function EventosPage() {
                       </button>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#7F8C8D]">Solo por invitación</p>
+                    <p className="text-xs text-muted">Solo por invitación</p>
                   )}
                 </div>
               )}
@@ -179,38 +190,38 @@ export default function EventosPage() {
                 <Users className="shrink-0" size={28} style={{ color: "var(--color-primary)" }} />
                 <div>
                   <p className="text-3xl font-bold leading-none" style={{ color: "var(--color-primary)" }}>{e.resumen.totalConvocados}</p>
-                  <p className="text-xs text-[#7F8C8D] mt-1">Empleados convocados</p>
+                  <p className="text-xs text-muted mt-1">Empleados convocados</p>
                 </div>
               </div>
               <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)" }}>
                 <UserCheck className="shrink-0 text-green-600" size={28} />
                 <div>
                   <p className="text-3xl font-bold leading-none text-green-700">{e.resumen.confirmados}</p>
-                  <p className="text-xs text-[#7F8C8D] mt-1">Confirmados</p>
+                  <p className="text-xs text-muted mt-1">Confirmados</p>
                 </div>
               </div>
               <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)" }}>
-                <UserX className="shrink-0 text-red-600" size={28} />
+                <UserX className="shrink-0 text-danger" size={28} />
                 <div>
                   <p className="text-3xl font-bold leading-none text-red-700">{e.resumen.rechazados}</p>
-                  <p className="text-xs text-[#7F8C8D] mt-1">Rechazados</p>
+                  <p className="text-xs text-muted mt-1">Rechazados</p>
                 </div>
               </div>
               <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)" }}>
                 <Clock className="shrink-0 text-amber-600" size={28} />
                 <div>
                   <p className="text-3xl font-bold leading-none text-amber-700">{e.resumen.pendientes}</p>
-                  <p className="text-xs text-[#7F8C8D] mt-1">Pendientes</p>
+                  <p className="text-xs text-muted mt-1">Pendientes</p>
                 </div>
               </div>
             </div>
 
             {canManage && (
-              <p className="text-xs text-[#7F8C8D] mt-2">Los contadores se actualizan al confirmar o rechazar asistencia.</p>
+              <p className="text-xs text-muted mt-2">Los contadores se actualizan al confirmar o rechazar asistencia.</p>
             )}
             {isAdmin && (
               <div className="flex justify-end mt-3">
-                <button type="button" className="text-red-600 text-sm hover:underline" onClick={() => darDeBaja(e.id)}>
+                <button type="button" className="link-danger text-sm" onClick={() => darDeBaja(e.id)}>
                   Dar de baja evento
                 </button>
               </div>
@@ -218,6 +229,7 @@ export default function EventosPage() {
           </div>
         ))
       )}
+      {ConfirmDialogHost}
     </div>
   );
 }

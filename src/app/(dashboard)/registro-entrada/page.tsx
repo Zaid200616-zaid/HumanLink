@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Clock, LogIn } from "lucide-react";
 import { useSession } from "@/lib/use-session";
 import { ASISTENCIA_BADGES } from "@/lib/asistencia-registro";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import { formatDateTime } from "@/lib/format-date";
 
 type Registro = {
   id: number;
@@ -61,24 +64,20 @@ export default function RegistroEntradaPage() {
 
   return (
     <div>
-      <header className="page-header">
-        <h1 className="page-title">Registro de entrada</h1>
-        <p className="page-subtitle">
-          {isEmpleado
-            ? "Registra tu llegada y consulta tu historial de asistencia."
-            : "Vista de registro de entrada (empleados)."}
-        </p>
-      </header>
+      <PageHeader
+        title="Registro de Entrada"
+        subtitle="Registra tu llegada y consulta tu historial de asistencia"
+      />
 
       {user?.empleadoId ? (
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="font-medium text-[#1B4F72]">
+              <p className="font-medium">
                 {user.empleado?.nombre} {user.empleado?.apellidoPaterno}
               </p>
-              <p className="text-sm text-[#7F8C8D] flex items-center gap-1 mt-1">
-                <Clock size={16} /> {new Date().toLocaleString("es-MX")}
+              <p className="text-sm text-muted flex items-center gap-1 mt-1">
+                <Clock size={16} /> {formatDateTime(new Date())}
               </p>
             </div>
             <button
@@ -91,17 +90,17 @@ export default function RegistroEntradaPage() {
               {hoyRegistrado ? "Entrada registrada hoy" : registrando ? "Registrando…" : "Registrar Entrada"}
             </button>
           </div>
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mt-4">{error}</div>}
-          {msg && <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm mt-4">{msg}</div>}
+          {error && <div className="form-alert-error mt-4">{error}</div>}
+          {msg && <div className="form-alert-success mt-4">{msg}</div>}
         </div>
       ) : (
-        <div className="card mb-6 text-sm text-[#7F8C8D]">
+        <div className="card mb-6 text-sm text-muted">
           Tu cuenta no está vinculada a un empleado. Contacta a Recursos Humanos.
         </div>
       )}
 
       <div className="card mb-4 flex flex-wrap gap-2 items-center">
-        <span className="text-sm font-medium text-[#1B4F72]">Filtrar historial:</span>
+        <span className="text-sm font-medium">Filtrar historial:</span>
         {(["dia", "semana", "mes"] as const).map((p) => (
           <button
             key={p}
@@ -116,7 +115,7 @@ export default function RegistroEntradaPage() {
 
       <div className="hl-table-shell">
         {loading ? (
-          <p className="p-5 text-[var(--color-muted)]">Cargando…</p>
+          <LoadingState label="Cargando registros…" compact />
         ) : (
           <div className="hl-table-wrap">
             <table className="hl-table min-w-[520px]">

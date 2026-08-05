@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { fetchJson } from "@/lib/fetch-client";
 
 export interface SessionUser {
   id: number;
@@ -17,9 +18,13 @@ export function useSession() {
   const [loading, setLoading] = useState(true);
 
   const cargar = useCallback(() => {
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
+    fetchJson<{
+      id: number;
+      email: string;
+      rol: string;
+      empleado?: { id: number; nombre: string; apellidoPaterno: string };
+    }>("/api/auth/me")
+      .then(({ data }) => {
         if (!data?.id) {
           setUser(null);
           return;

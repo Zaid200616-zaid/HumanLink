@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Download, FileText } from "lucide-react";
 import { descargarPdf } from "@/lib/pdf";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
 
 type DeptoRow = { departamento: string; organizacion: string; empleados: number };
 
@@ -56,7 +58,7 @@ export default function ReportesPage() {
     }
   }
 
-  if (!data) return <p>Cargando reportes...</p>;
+  if (!data) return <LoadingState label="Cargando reportes…" />;
 
   const resumen = data.resumen as Record<string, number>;
   const empleadosPorDepto = (data.empleadosPorDepto as DeptoRow[]) || [];
@@ -64,34 +66,34 @@ export default function ReportesPage() {
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap justify-between items-start gap-4">
-        <div>
-          <h1 className="page-title">Reportes Administrativos</h1>
-          <p className="text-[#7F8C8D]">RF-H08 · RNF-B03 Exportación PDF / Excel con filtros del mes</p>
-        </div>
-        <div className="flex flex-wrap gap-2 items-end">
-          <div>
-            <label className="label-field text-xs">Mes del reporte</label>
-            <input type="month" className="input-field" value={mes} onChange={(e) => setMes(e.target.value)} />
+      <PageHeader
+        title="Reportes Administrativos"
+        subtitle="Indicadores del mes · Exportación PDF y Excel"
+        actions={
+          <div className="flex flex-wrap gap-2 items-end">
+            <div>
+              <label className="label-field text-xs">Mes del reporte</label>
+              <input type="month" className="input-field" value={mes} onChange={(e) => setMes(e.target.value)} />
+            </div>
+            <Link href="/reportes/historial" className="btn-outline text-sm">Historial</Link>
+            <a href={`/api/reportes/export?format=csv&mes=${mes}`} onClick={() => registrarHistorial("CSV")} className="btn-outline flex items-center gap-2 text-sm">
+              <Download size={16} /> CSV
+            </a>
+            <a href={`/api/reportes/export?format=xlsx&mes=${mes}`} onClick={() => registrarHistorial("XLSX")} className="btn-outline flex items-center gap-2 text-sm">
+              <Download size={16} /> Excel
+            </a>
+            <button onClick={generarReportePdf} disabled={generandoPdf} className="btn-primary flex items-center gap-2 text-sm">
+              <FileText size={16} /> {generandoPdf ? "Generando..." : "PDF"}
+            </button>
           </div>
-          <Link href="/reportes/historial" className="btn-outline text-sm">Historial</Link>
-          <a href={`/api/reportes/export?format=csv&mes=${mes}`} onClick={() => registrarHistorial("CSV")} className="btn-outline flex items-center gap-2 text-sm">
-            <Download size={16} /> CSV
-          </a>
-          <a href={`/api/reportes/export?format=xlsx&mes=${mes}`} onClick={() => registrarHistorial("XLSX")} className="btn-outline flex items-center gap-2 text-sm">
-            <Download size={16} /> Excel
-          </a>
-          <button onClick={generarReportePdf} disabled={generandoPdf} className="btn-primary flex items-center gap-2 text-sm">
-            <FileText size={16} /> {generandoPdf ? "Generando..." : "PDF"}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {Object.entries(resumen).map(([key, value]) => (
           <div key={key} className="card text-center">
             <p className="text-2xl font-bold" style={{ color: "var(--color-primary)" }}>{value}</p>
-            <p className="text-xs text-[#7F8C8D] capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
+            <p className="text-xs text-muted capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
           </div>
         ))}
       </div>
@@ -112,7 +114,7 @@ export default function ReportesPage() {
               </div>
             </div>
           ))}
-          {empleadosPorDepto.length === 0 && <p className="text-[#7F8C8D] text-sm">Sin datos</p>}
+          {empleadosPorDepto.length === 0 && <p className="text-muted text-sm">Sin datos</p>}
         </div>
       </div>
 

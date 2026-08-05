@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { fetchList } from "@/lib/fetch-client";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
 
 interface Evaluacion {
   id: number;
@@ -109,12 +111,10 @@ export default function EvaluacionesPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="page-title">
-          Evaluación de Desempeño
-        </h1>
-        <p className="text-[#7F8C8D]">Registro manual de evaluaciones · RF-H11</p>
-      </div>
+      <PageHeader
+        title="Evaluación de Desempeño"
+        subtitle="Periodos, calificaciones y retroalimentación del personal"
+      />
 
       <div className={`grid gap-5 ${puedeEvaluar ? "lg:grid-cols-[380px_1fr]" : "grid-cols-1"}`}>
         {puedeEvaluar && (
@@ -122,7 +122,7 @@ export default function EvaluacionesPage() {
             <h2 className="font-semibold">Nueva evaluación</h2>
 
             <div>
-              <label className="block text-sm mb-1 text-[#7F8C8D]">Empleado</label>
+              <label className="block text-sm mb-1 text-muted">Empleado</label>
               <select
                 value={empleadoId}
                 onChange={(e) => setEmpleadoId(e.target.value)}
@@ -139,7 +139,7 @@ export default function EvaluacionesPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1 text-[#7F8C8D]">Tipo de evaluación</label>
+              <label className="block text-sm mb-1 text-muted">Tipo de evaluación</label>
               <select value={tipo} onChange={(e) => setTipo(e.target.value)} className="input w-full">
                 {TIPOS.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -151,7 +151,7 @@ export default function EvaluacionesPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm mb-1 text-[#7F8C8D]">Calificación (0-100)</label>
+                <label className="block text-sm mb-1 text-muted">Calificación (0-100)</label>
                 <input
                   type="number"
                   min={0}
@@ -159,11 +159,11 @@ export default function EvaluacionesPage() {
                   value={puntaje}
                   onChange={(e) => setPuntaje(e.target.value)}
                   className="input w-full"
-                  placeholder="Ej. 85"
+                  placeholder="Calificación del 0 al 100"
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-[#7F8C8D]">Fecha</label>
+                <label className="block text-sm mb-1 text-muted">Fecha</label>
                 <input
                   type="date"
                   value={fecha}
@@ -175,7 +175,7 @@ export default function EvaluacionesPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1 text-[#7F8C8D]">Observaciones</label>
+              <label className="block text-sm mb-1 text-muted">Observaciones</label>
               <textarea
                 value={comentarios}
                 onChange={(e) => setComentarios(e.target.value)}
@@ -197,9 +197,9 @@ export default function EvaluacionesPage() {
 
         <div className="space-y-4">
           {loading ? (
-            <p className="text-[#7F8C8D]">Cargando evaluaciones…</p>
+            <LoadingState label="Cargando evaluaciones…" compact />
           ) : evaluaciones.length === 0 ? (
-            <div className="card text-center text-[#7F8C8D]">
+            <div className="card text-center text-muted">
               Aún no hay evaluaciones registradas.
             </div>
           ) : (
@@ -218,7 +218,7 @@ export default function EvaluacionesPage() {
                         {tipoLabel(ev.tipo)}
                       </span>
                     </div>
-                    <p className="text-sm text-[#7F8C8D] mt-0.5">
+                    <p className="text-sm text-muted mt-0.5">
                       Evaluador: {ev.evaluador.nombre} {ev.evaluador.apellidoPaterno} ·{" "}
                       {new Date(ev.fecha).toLocaleDateString("es-MX")}
                     </p>

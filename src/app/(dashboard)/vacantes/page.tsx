@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchList } from "@/lib/fetch-client";
+import StatusBadge from "@/components/ui/StatusBadge";
+import PageHeader from "@/components/ui/PageHeader";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 interface Vacante {
   id: number;
@@ -42,6 +45,7 @@ export default function VacantesPage() {
   const [form, setForm] = useState(formVacío);
   const [editId, setEditId] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   const cargar = useCallback(() => {
     fetch("/api/vacantes").then((r) => r.json()).then(setVacantes);
@@ -100,22 +104,27 @@ export default function VacantesPage() {
   }
 
   async function eliminar(v: Vacante) {
-    if (!confirm(v._count.candidatos ? "¿Cerrar/desactivar esta vacante?" : "¿Eliminar vacante?")) return;
+    const cerrar = v._count.candidatos > 0;
+    const ok = await confirm(
+      cerrar ? "Cerrar vacante" : "Eliminar vacante",
+      cerrar ? "¿Cerrar/desactivar esta vacante?" : "¿Eliminar vacante?"
+    );
+    if (!ok) return;
     const res = await fetch(`/api/vacantes/${v.id}`, { method: "DELETE" });
     if (res.ok) cargar();
   }
 
   return (
     <div>
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <div>
-          <h1 className="page-title">Vacantes</h1>
-          <p className="text-[#7F8C8D]">Gestión de puestos y oportunidades laborales</p>
-        </div>
-        <Link href="/#vacantes" className="btn-secondary text-sm" target="_blank">
-          Ver vacantes en el sitio web
-        </Link>
-      </div>
+      <PageHeader
+        title="Vacantes"
+        subtitle="Gestión de puestos y oportunidades laborales"
+        actions={
+          <Link href="/#vacantes" className="btn-secondary text-sm" target="_blank">
+            Ver vacantes en el sitio web
+          </Link>
+        }
+      />
 
       <form onSubmit={guardar} className="card mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <h2 className="font-semibold md:col-span-2">{editId ? "Editar vacante" : "Crear vacante"}</h2>
@@ -185,7 +194,7 @@ export default function VacantesPage() {
           {editId && (
             <button type="button" className="btn-outline text-sm" onClick={() => { setEditId(null); setForm(formVacío); }}>Cancelar</button>
           )}
-          {msg && <span className="text-sm text-[#7F8C8D]">{msg}</span>}
+          {msg && <span className="text-sm text-muted">{msg}</span>}
         </div>
       </form>
 
@@ -203,14 +212,14 @@ export default function VacantesPage() {
           </thead>
           <tbody>
             {vacantes.map((v) => (
-              <tr key={v.id} className="border-b hover:bg-[#F4F6F7]">
+              <tr key={v.id} className="border-b hover:bg-[var(--color-surface-2)]">
                 <td className="py-3 font-medium">{v.titulo}</td>
                 <td className="py-3">{v.departamento.nombre}</td>
                 <td className="py-3">{v.cupoDisponible}/{v.cupoTotal} · {v._count.candidatos} cand.</td>
-                <td className="py-3">{v.estado}</td>
+                <td className="py-3"><StatusBadge estado={v.estado} /></td>
                 <td className="py-3">
-                  <button type="button" className="text-[#2874A6] hover:underline mr-3" onClick={() => editar(v)}>Editar</button>
-                  <button type="button" className="text-red-600 hover:underline" onClick={() => eliminar(v)}>Eliminar</button>
+                  <button type="button" className="link-action mr-3" onClick={() => editar(v)}>Editar</button>
+                  <button type="button" className="link-danger" onClick={() => eliminar(v)}>Eliminar</button>
                 </td>
               </tr>
             ))}
@@ -218,6 +227,7 @@ export default function VacantesPage() {
         </table>
         </div>
       </div>
+      {ConfirmDialogHost}
     </div>
   );
 }

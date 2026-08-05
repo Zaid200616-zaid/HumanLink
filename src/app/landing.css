@@ -500,6 +500,27 @@
   border-radius: 10px;
   border: 1px solid var(--hl-border);
   font: inherit;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000;
+  caret-color: #000000;
+  background-color: #ffffff !important;
+}
+
+.landing-root .hl-modal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.landing-root .hl-modal textarea,
+.landing-root .hl-modal select,
+.landing-root .hl-form-field input,
+.landing-root .hl-form-field textarea,
+.landing-root .hl-form-field select {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000;
+  caret-color: #000000;
+  background-color: #ffffff !important;
+}
+
+.hl-form-field input::placeholder,
+.hl-form-field textarea::placeholder {
+  color: var(--hl-muted);
 }
 
 .hl-map-placeholder {

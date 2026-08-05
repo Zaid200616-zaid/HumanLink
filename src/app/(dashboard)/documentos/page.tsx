@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { TIPOS_DOCUMENTO } from "@/lib/documentos";
 import { fetchList } from "@/lib/fetch-client";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
 import { FileText, Upload, Search, Eye, Download, Pencil, Trash2 } from "lucide-react";
 
 type Doc = {
@@ -28,12 +32,12 @@ const formVacío = {
 };
 
 export default function DocumentosPage() {
+  const { showSuccess, showError, showWarning } = useToast();
   const [docs, setDocs] = useState<Doc[]>([]);
   const [empleados, setEmpleados] = useState<EmpleadoOpt[]>([]);
   const [form, setForm] = useState(formVacío);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [buscar, setBuscar] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
@@ -71,7 +75,7 @@ export default function DocumentosPage() {
     if (!file) return;
     const ok = [".pdf", ".jpg", ".jpeg", ".png"].some((ext) => file.name.toLowerCase().endsWith(ext));
     if (!ok) {
-      setMsg("Error: solo PDF, JPG o PNG");
+      showWarning("Solo se permiten archivos PDF, JPG o PNG.");
       return;
     }
     setArchivo(file);
@@ -80,9 +84,8 @@ export default function DocumentosPage() {
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    setMsg("");
     if (!editId && !archivo) {
-      setMsg("Error: seleccione un archivo");
+      showWarning("Seleccione un archivo.");
       return;
     }
     setSubiendo(true);
@@ -107,10 +110,10 @@ export default function DocumentosPage() {
     setSubiendo(false);
     setTimeout(() => setUploadProgress(null), 800);
     if (!res.ok) {
-      setMsg(d.error || "Error al guardar");
+      showError(d.error || MSG.errorGenerico);
       return;
     }
-    setMsg(editId ? "Documento actualizado" : "Documento registrado");
+    showSuccess(editId ? MSG.documentoActualizado : MSG.documentoCreado);
     setForm(formVacío);
     setArchivo(null);
     setEditId(null);
@@ -138,12 +141,10 @@ export default function DocumentosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">
-          Gestión de Documentos
-        </h1>
-        <p className="text-sm text-[#7F8C8D] mt-1">RF-H18 · RNF17 Usabilidad — búsqueda, vista previa y carga drag &amp; drop</p>
-      </div>
+      <PageHeader
+        title="Gestión de Documentos"
+        subtitle="Consulta, carga y administración del expediente documental"
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-5">
         <form
@@ -198,7 +199,7 @@ export default function DocumentosPage() {
           <div>
             <label className="label-field flex items-center gap-1"><Upload size={14} /> Archivo (PDF, JPG, PNG)</label>
             <div
-              className={`rounded-lg border-2 border-dashed p-4 text-center text-sm transition-colors ${dragOver ? "border-[#2874A6] bg-[#2874A6]/5" : "border-[#D5DBDB]"}`}
+              className={`hl-dropzone ${dragOver ? "hl-dropzone-active" : ""}`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => {
@@ -208,21 +209,21 @@ export default function DocumentosPage() {
               }}
             >
               Arrastre el archivo aquí o
-              <label className="text-[#2874A6] cursor-pointer hover:underline ml-1">
+              <label className="link-action cursor-pointer hover:underline ml-1">
                 selecciónelo
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => asignarArchivo(e.target.files?.[0] || null)} />
               </label>
-              {archivo && <p className="mt-2 text-xs text-[#7F8C8D]">Seleccionado: {archivo.name}</p>}
+              {archivo && <p className="mt-2 text-xs text-muted">Seleccionado: {archivo.name}</p>}
             </div>
             {uploadProgress !== null && (
               <div className="mt-2">
                 <div className="h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
-                  <div className="h-full bg-[#2874A6] transition-all" style={{ width: `${uploadProgress}%` }} />
+                  <div className="hl-progress-fill" style={{ width: `${uploadProgress}%` }} />
                 </div>
-                <p className="text-xs text-[#7F8C8D] mt-1">{subiendo ? "Subiendo documento…" : "Completado"}</p>
+                <p className="text-xs text-muted mt-1">{subiendo ? "Subiendo documento…" : "Completado"}</p>
               </div>
             )}
-            {editId && <p className="text-xs text-[#7F8C8D] mt-1">Opcional: deje vacío para conservar el archivo actual.</p>}
+            {editId && <p className="text-xs text-muted mt-1">Opcional: deje vacío para conservar el archivo actual.</p>}
           </div>
 
           <div>
@@ -243,8 +244,6 @@ export default function DocumentosPage() {
             />
             Estado activo
           </label>
-
-          {msg && <p className="text-sm" style={{ color: msg.includes("Error") ? "var(--color-danger)" : "var(--color-secondary)" }}>{msg}</p>}
 
           <div className="flex gap-2">
             <button type="submit" className="btn-primary text-sm flex-1 flex items-center justify-center gap-2" disabled={subiendo}>
@@ -279,7 +278,7 @@ export default function DocumentosPage() {
             </div>
           </div>
           {loading ? (
-            <p className="p-5 text-[#7F8C8D]">Cargando…</p>
+            <LoadingState label="Cargando documentos…" compact />
           ) : (
             <div className="hl-table-wrap">
               <table className="hl-table min-w-[720px]">
@@ -311,19 +310,19 @@ export default function DocumentosPage() {
                       </td>
                       <td>
                         <div className="flex flex-wrap gap-2 text-xs items-center">
-                          <button type="button" onClick={() => setPreview(d)} className="text-[#2874A6] hover:underline inline-flex items-center gap-0.5">
+                          <button type="button" onClick={() => setPreview(d)} className="link-action hover:underline inline-flex items-center gap-0.5">
                             <Eye size={12} /> Vista previa
                           </button>
-                          <a href={d.rutaArchivo} target="_blank" rel="noopener noreferrer" className="text-[#2874A6] hover:underline inline-flex items-center gap-0.5">
+                          <a href={d.rutaArchivo} target="_blank" rel="noopener noreferrer" className="link-action hover:underline inline-flex items-center gap-0.5">
                             <Eye size={12} /> Abrir
                           </a>
-                          <a href={d.rutaArchivo} download className="text-[#2874A6] hover:underline inline-flex items-center gap-0.5">
+                          <a href={d.rutaArchivo} download className="link-action hover:underline inline-flex items-center gap-0.5">
                             <Download size={12} /> Descargar
                           </a>
-                          <button type="button" onClick={() => editar(d)} className="text-[#2874A6] hover:underline inline-flex items-center gap-0.5">
+                          <button type="button" onClick={() => editar(d)} className="link-action hover:underline inline-flex items-center gap-0.5">
                             <Pencil size={12} /> Editar
                           </button>
-                          <button type="button" onClick={() => setConfirmDeleteId(d.id)} className="text-red-600 hover:underline inline-flex items-center gap-0.5">
+                          <button type="button" onClick={() => setConfirmDeleteId(d.id)} className="link-danger hover:underline inline-flex items-center gap-0.5">
                             <Trash2 size={12} /> Eliminar
                           </button>
                         </div>
@@ -332,7 +331,7 @@ export default function DocumentosPage() {
                   ))}
                   {docsFiltrados.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-[#7F8C8D]">
+                      <td colSpan={6} className="px-4 py-8 text-center text-muted">
                         No hay documentos registrados.
                       </td>
                     </tr>
@@ -348,7 +347,7 @@ export default function DocumentosPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPreview(null)}>
           <div className="card max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-semibold mb-2 flex items-center gap-2"><FileText size={18} /> {preview.nombre}</h2>
-            <p className="text-sm text-[#7F8C8D] mb-3">{preview.tipo} · {preview.empleado.nombre} {preview.empleado.apellidoPaterno}</p>
+            <p className="text-sm text-muted mb-3">{preview.tipo} · {preview.empleado.nombre} {preview.empleado.apellidoPaterno}</p>
             <div className="flex-1 min-h-[320px] rounded-lg overflow-hidden border" style={{ borderColor: "var(--color-border)" }}>
               {preview.rutaArchivo.match(/\.pdf(\?|$)/i) ? (
                 <iframe title="Vista previa" src={preview.rutaArchivo} className="w-full h-[60vh]" />

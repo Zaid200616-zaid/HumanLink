@@ -93,7 +93,7 @@ export default function LoginPage() {
                 className={`input-field w-full ${fieldErrors.email ? "border-red-500 ring-1 ring-red-300" : ""}`}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: undefined })); }}
-                placeholder="tu@correo.com"
+                placeholder="nombre.apellido@humanlink.mx"
               />
               {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
             </div>
@@ -109,7 +109,7 @@ export default function LoginPage() {
               {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
             </div>
             <p className="text-center text-sm">
-              <a href="/recuperar" className="text-[#2874A6] hover:underline">¿Olvidaste tu contraseña?</a>
+              <a href="/recuperar" className="link-action">¿Olvidaste tu contraseña?</a>
             </p>
 
             {bloqueo && (
@@ -134,17 +134,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm mt-4 pt-4 border-t border-[#D5DBDB]">
-            <Link href="/#vacantes" className="text-[#2874A6] hover:underline font-medium">
-              Ver vacantes y postularme (acceso público)
+          <p className="text-center text-sm mt-4 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
+            <Link href="/#vacantes" className="link-action font-medium">
+              Ver vacantes abiertas
             </Link>
           </p>
         </div>
 
         <div className="card">
-          <h2 className="text-sm font-semibold text-[#1B4F72] mb-3">Acceso rápido por rol</h2>
-          <p className="text-xs text-[#7F8C8D] mb-4">
-            Contraseña para todos: <strong>{DEMO_PASSWORD}</strong>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--color-text)" }}>Perfiles de acceso</h2>
+          <p className="text-xs text-muted mb-3">
+            Use los correos indicados abajo. Contraseña corporativa: <strong>{DEMO_PASSWORD}</strong>
+          </p>
+          <p className="text-xs text-muted mb-4">
+            Los perfiles de Empleado solo pueden acceder en horario de su turno. Para demostración fuera de horario, use Administrador o Recursos Humanos.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {DEMO_USERS.map((user) => (
@@ -153,17 +156,18 @@ export default function LoginPage() {
                 type="button"
                 disabled={loading}
                 onClick={() => loginWith({ email: user.email, password: DEMO_PASSWORD })}
-                className="text-left p-3 rounded-lg border border-[#D5DBDB] hover:border-[#2874A6] hover:bg-[#F4F6F7] transition-colors disabled:opacity-50"
+                className="text-left p-3 rounded-lg border transition-colors disabled:opacity-50"
+                style={{ borderColor: "var(--color-border)" }}
               >
-                <p className="font-medium text-sm text-[#1B4F72]">{user.label}</p>
-                <p className="text-xs text-[#7F8C8D]">{user.descripcion}</p>
-                <p className="text-xs text-[#2874A6] mt-1 truncate">{user.email}</p>
+                <p className="font-medium text-sm">{user.label}</p>
+                <p className="text-xs text-muted">{user.descripcion}</p>
+                <p className="text-xs link-action mt-1 truncate">{user.email}</p>
               </button>
             ))}
           </div>
         </div>
 
-        <p className="text-xs text-white/60 text-center">Universidad Tecnológica de Tijuana · Grupo 5B DSM</p>
+        <p className="text-xs text-white/60 text-center">HumanLink · Plataforma de recursos humanos © 2026</p>
       </div>
     </div>
   );

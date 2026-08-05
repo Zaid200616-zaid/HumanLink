@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchList } from "@/lib/fetch-client";
 import { useSession } from "@/lib/use-session";
+import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type EmpleadoAsignado = {
   id: number;
@@ -42,6 +47,8 @@ const formVacío = {
 
 export default function TurnosPage() {
   const { isAdmin, isRH } = useSession();
+  const { showError } = useToast();
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
   const puedeEscribir = isAdmin || isRH;
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [todosEmpleados, setTodosEmpleados] = useState<EmpleadoOpt[]>([]);
@@ -125,11 +132,16 @@ export default function TurnosPage() {
   }
 
   async function eliminarODesactivar(t: Turno) {
-    if (!confirm(t._count.empleados > 0 ? "¿Desactivar este turno?" : "¿Eliminar este turno?")) return;
+    const desactivar = t._count.empleados > 0;
+    const ok = await confirm(
+      desactivar ? "Desactivar turno" : "Eliminar turno",
+      desactivar ? "¿Desactivar este turno?" : "¿Eliminar este turno?"
+    );
+    if (!ok) return;
     const res = await fetch(`/api/turnos/${t.id}`, { method: "DELETE" });
     if (!res.ok) {
       const d = await res.json();
-      alert(d.error || "Error");
+      showError(d.error || MSG.errorGenerico);
       return;
     }
     cargar();
@@ -184,7 +196,7 @@ export default function TurnosPage() {
     setGuardandoAsignacion(false);
     const actualizado = await res.json();
     if (!res.ok) {
-      alert(actualizado.error || "Error al asignar");
+      showError(actualizado.error || MSG.errorGenerico);
       return;
     }
     setTurnos((prev) =>
@@ -205,12 +217,10 @@ export default function TurnosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">
-          Turnos Laborales
-        </h1>
-        <p className="text-sm text-[#7F8C8D] mt-1">RF-H20 · RNF12 Búsqueda paginada (&lt; 3 s)</p>
-      </div>
+      <PageHeader
+        title="Turnos Laborales"
+        subtitle="Horarios laborales y asignación de personal por turno"
+      />
 
       <div className="card grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
         <div>
@@ -300,10 +310,10 @@ export default function TurnosPage() {
       )}
 
       {loading ? (
-        <p className="text-[#7F8C8D]">Cargando turnos…</p>
+        <LoadingState label="Cargando turnos…" />
       ) : turnos.length === 0 ? (
         <div
-          className="rounded-xl p-6 text-center text-[#7F8C8D]"
+          className="rounded-xl p-6 text-center text-muted"
           style={{ border: "1px solid var(--color-border)" }}
         >
           No hay turnos registrados.
@@ -334,7 +344,7 @@ export default function TurnosPage() {
                 </span>
               </div>
 
-              {t.descripcion && <p className="text-sm text-[#7F8C8D]">{t.descripcion}</p>}
+              {t.descripcion && <p className="text-sm text-muted">{t.descripcion}</p>}
 
               <p className="text-sm font-medium">
                 {t._count.empleados}{" "}
@@ -342,11 +352,11 @@ export default function TurnosPage() {
               </p>
 
               <div>
-                <p className="text-xs font-semibold text-[#7F8C8D] uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
                   Empleados asignados
                 </p>
                 {(t.empleados?.length ?? 0) === 0 ? (
-                  <p className="text-sm text-[#7F8C8D]">Sin asignaciones</p>
+                  <p className="text-sm text-muted">Sin asignaciones</p>
                 ) : (
                   <ul className="space-y-2 max-h-40 overflow-y-auto text-sm">
                     {t.empleados!.map((e) => (
@@ -409,7 +419,7 @@ export default function TurnosPage() {
 
       {totalPages > 1 && (
         <div className="flex justify-between items-center text-sm mt-4">
-          <span className="text-[#7F8C8D]">Página {page} de {totalPages}</span>
+          <span className="text-muted">Página {page} de {totalPages}</span>
           <div className="flex gap-2">
             <button type="button" disabled={page <= 1} className="btn-outline text-sm" onClick={() => setPage((p) => p - 1)}>Anterior</button>
             <button type="button" disabled={page >= totalPages} className="btn-outline text-sm" onClick={() => setPage((p) => p + 1)}>Siguiente</button>
@@ -432,7 +442,7 @@ export default function TurnosPage() {
             <h2 id="modal-asignar-titulo" className="font-semibold text-lg mb-1">
               Asignar empleados — {modalTurno.nombre}
             </h2>
-            <p className="text-sm text-[#7F8C8D] mb-4">
+            <p className="text-sm text-muted mb-4">
               Horario {modalTurno.horaInicio} – {modalTurno.horaFin}
             </p>
 
@@ -464,14 +474,14 @@ export default function TurnosPage() {
                       />
                       <span>
                         {e.nombre} {e.apellidoPaterno}{" "}
-                        <span className="text-[#7F8C8D] font-mono text-xs">{e.numeroEmpleado}</span>
+                        <span className="text-muted font-mono text-xs">{e.numeroEmpleado}</span>
                       </span>
                     </label>
                   </li>
                 );
               })}
               {empleadosFiltradosModal.length === 0 && (
-                <li className="text-sm text-[#7F8C8D] px-2 py-4 text-center">Sin resultados</li>
+                <li className="text-sm text-muted px-2 py-4 text-center">Sin resultados</li>
               )}
             </ul>
 
@@ -491,6 +501,7 @@ export default function TurnosPage() {
           </div>
         </div>
       )}
+      {ConfirmDialogHost}
     </div>
   );
 }

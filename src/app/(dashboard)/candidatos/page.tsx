@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FileText, ExternalLink, Download } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import PageHeader from "@/components/ui/PageHeader";
 
 const ETAPAS = [
   "RECEPCION", "REVISION_CV", "ENTREVISTA", "EVALUACION",
@@ -10,7 +12,7 @@ const ETAPAS = [
 ];
 
 const etapaLabels: Record<string, string> = {
-  RECEPCION: "Postulación Recibida",
+  RECEPCION: "Postulación recibida",
   REVISION_CV: "Revisión CV",
   ENTREVISTA: "Entrevista",
   EVALUACION: "Evaluación",
@@ -33,7 +35,7 @@ interface Candidato {
 type TurnoOpt = { id: number; nombre: string; horaInicio: string; horaFin: string };
 
 export default function CandidatosPage() {
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showWarning } = useToast();
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [turnos, setTurnos] = useState<TurnoOpt[]>([]);
   const [contratarModal, setContratarModal] = useState<Candidato | null>(null);
@@ -64,7 +66,7 @@ export default function CandidatosPage() {
     const data = await res.json();
     setGuardando(false);
     if (!res.ok) {
-      showError(data.error || "No se pudo actualizar la etapa del candidato.");
+      showError(data.error || MSG.errorGenerico);
       return;
     }
     if (data.acceso?.email) {
@@ -72,7 +74,7 @@ export default function CandidatosPage() {
         `Contratación exitosa. Correo: ${data.acceso.email} · Contraseña temporal: HumanLink2026!`
       );
     } else if (etapa !== "CONTRATADO") {
-      showSuccess("Etapa actualizada correctamente.");
+      showSuccess(MSG.etapaActualizada);
     }
     setContratarModal(null);
     setTurnoId("");
@@ -91,7 +93,7 @@ export default function CandidatosPage() {
   async function confirmarContratacion() {
     if (!contratarModal) return;
     if (turnos.length > 1 && !turnoId) {
-      showError("Debe seleccionar un turno laboral.");
+      showWarning("Debe seleccionar un turno laboral.");
       return;
     }
     await aplicarEtapa(
@@ -103,10 +105,10 @@ export default function CandidatosPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="page-title">Proceso de Contratación</h1>
-        <p className="page-subtitle">Pipeline de candidatos y etapas del proceso de selección</p>
-      </div>
+      <PageHeader
+        title="Proceso de Contratación"
+        subtitle="Seguimiento de candidatos y etapas del proceso de selección"
+      />
 
       {candidatos.length === 0 ? (
         <div className="card text-center text-muted">No hay candidatos pendientes</div>
@@ -209,7 +211,7 @@ export default function CandidatosPage() {
                   ))}
                 </select>
                 <p className="field-hint mt-1">
-                  El turno es obligatorio para el control de asistencias (RF-H06).
+                  El turno laboral es obligatorio para registrar la asistencia del colaborador.
                 </p>
               </div>
             )}

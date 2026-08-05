@@ -12,6 +12,8 @@ import { fetchList } from "@/lib/fetch-client";
 import Avatar from "@/components/Avatar";
 
 import ExpedienteVacacionesPanel from "@/components/ExpedienteVacacionesPanel";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
 
 import { Calendar, Users } from "lucide-react";
 
@@ -72,7 +74,7 @@ export default function VacacionesPage() {
 
 
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return <LoadingState />;
 
 
 
@@ -80,21 +82,10 @@ export default function VacacionesPage() {
 
     <div>
 
-      <div className="mb-8">
-
-        <h1 className="page-title">
-
-          Gestión de Vacaciones
-
-        </h1>
-
-        <p className="text-[#7F8C8D]">
-
-          Expediente de vacaciones · Saldo · Historial · Política LFT México
-
-        </p>
-
-      </div>
+      <PageHeader
+        title="Gestión de Vacaciones"
+        subtitle="Saldo disponible, historial de movimientos y política interna de vacaciones"
+      />
 
 
 
@@ -122,7 +113,7 @@ export default function VacacionesPage() {
 
                   className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
 
-                    selectedId === e.id ? "bg-[#EBF5FB] border border-[#2874A6]" : "hover:bg-[#F4F6F7]"
+                    selectedId === e.id ? "hl-row-selected" : "hover:bg-[var(--color-surface-2)]"
 
                   }`}
 
@@ -134,7 +125,7 @@ export default function VacacionesPage() {
 
                     <p className="text-sm font-medium">{e.nombre} {e.apellidoPaterno}</p>
 
-                    <p className="text-xs text-[#7F8C8D]">{e.puesto}</p>
+                    <p className="text-xs text-muted">{e.puesto}</p>
 
                   </div>
 
@@ -168,7 +159,7 @@ export default function VacacionesPage() {
 
           ) : (
 
-            <p className="text-[#7F8C8D] text-center py-8">
+            <p className="text-muted text-center py-8">
 
               {canManage || isSupervisor ? "Selecciona un empleado para ver su expediente" : "No se encontró expediente"}
 
@@ -208,11 +199,11 @@ export default function VacacionesPage() {
 
           ].map(([ant, dias]) => (
 
-            <div key={ant} className="p-2 bg-[#F4F6F7] rounded text-center">
+            <div key={ant} className="p-2 bg-[var(--color-surface-2)] rounded text-center">
 
               <p className="font-medium">{ant}</p>
 
-              <p className="text-[#17A589]">{dias}</p>
+              <p className="text-success">{dias}</p>
 
             </div>
 
@@ -222,7 +213,7 @@ export default function VacacionesPage() {
 
         {canManage && (
 
-          <Link href="/solicitudes" className="inline-block mt-4 text-sm text-[#2874A6] hover:underline">
+          <Link href="/solicitudes" className="inline-block mt-4 text-sm link-action hover:underline">
 
             Ir a solicitudes pendientes →
 

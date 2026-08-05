@@ -1,6 +1,6 @@
 /** RNF-PQ02 — Mensaje al intentar editar una queja cerrada */
 export const MSG_BLOQUEO_QUEJA_CERRADA =
-  "Se ha bloqueado la edición para evitar cambios no autorizados en las resoluciones finales de las quejas";
+  "Se ha bloqueado la edición para evitar cambios no autorizados en las resoluciones finales de las quejas.";
 
 /** Estado Cerrada: no admite modificaciones */
 export function quejaEstaCerrada(estado: string): boolean {

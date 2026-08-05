@@ -5,7 +5,10 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PaginationBar from "@/components/ui/PaginationBar";
+import LoadingState from "@/components/ui/LoadingState";
+import ActivoBadge from "@/components/ui/ActivoBadge";
 import { useSession } from "@/lib/use-session";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 interface EmpleadoRow {
   id: number;
@@ -39,6 +42,7 @@ export default function EmpleadosPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   const cargar = useCallback(async (busqueda: string, pagina: number) => {
     setLoading(true);
@@ -73,7 +77,11 @@ export default function EmpleadosPage() {
   async function darDeBaja(e: EmpleadoRow) {
     if (!e.activo) return;
     const nombre = `${e.nombre} ${e.apellidoPaterno}`;
-    if (!confirm(`¿Dar de baja a ${nombre}? El empleado quedará como Inactivo y se conservará su información.`)) return;
+    const ok = await confirm(
+      "Dar de baja empleado",
+      `¿Dar de baja a ${nombre}? El empleado quedará como Inactivo y se conservará su información.`
+    );
+    if (!ok) return;
     const res = await fetch(`/api/empleados/${e.id}`, { method: "DELETE" });
     if (res.ok) cargar(q, page);
   }
@@ -82,7 +90,7 @@ export default function EmpleadosPage() {
     <div>
       <PageHeader
         title="Empleados"
-        subtitle="RF-H02 · Validación global · Tabla unificada HumanLink"
+        subtitle="Directorio del personal activo con búsqueda y filtros"
       />
 
       <div className="card mb-5">
@@ -90,10 +98,10 @@ export default function EmpleadosPage() {
           <div>
             <label className="label-field">Buscar</label>
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-[#7F8C8D]" size={16} />
+              <Search className="absolute left-3 top-2.5 text-muted" size={16} aria-hidden />
               <input
                 className="input-field pl-9 w-full"
-                placeholder="Nombre, email, número, CURP, RFC…"
+                placeholder="Nombre, correo, número de empleado, CURP o RFC…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -124,9 +132,9 @@ export default function EmpleadosPage() {
       </div>
 
       {loading ? (
-        <p className="text-[#7F8C8D]">Buscando empleados…</p>
+        <LoadingState label="Buscando empleados…" />
       ) : empleados.length === 0 ? (
-        <div className="card text-center text-[#7F8C8D]">
+        <div className="card text-center text-muted">
           No se encontraron empleados con esos criterios.
         </div>
       ) : (
@@ -134,26 +142,26 @@ export default function EmpleadosPage() {
           <div className="hl-table-wrap">
           <table className="hl-table">
             <thead>
-              <tr className="border-b text-left">
-                <th className="pb-3">No. Empleado</th>
-                <th className="pb-3">Nombre</th>
-                <th className="pb-3">Puesto</th>
-                <th className="pb-3 hidden md:table-cell">CURP / RFC</th>
-                <th className="pb-3">Departamento</th>
-                <th className="pb-3 hidden lg:table-cell">Organización</th>
-                <th className="pb-3">Estado</th>
-                <th className="pb-3">Acciones</th>
+              <tr>
+                <th>No. empleado</th>
+                <th>Nombre</th>
+                <th>Puesto</th>
+                <th className="hidden md:table-cell">CURP / RFC</th>
+                <th>Departamento</th>
+                <th className="hidden lg:table-cell">Organización</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {empleados.map((e) => (
                 <tr key={e.id}>
                   <td className="font-mono text-xs">{e.numeroEmpleado}</td>
-                  <td className="py-3 font-medium">
+                  <td className="font-medium">
                     {e.nombre} {e.apellidoPaterno} {e.apellidoMaterno || ""}
                   </td>
-                  <td className="py-3">{e.puesto}</td>
-                  <td className="py-3 hidden md:table-cell text-xs text-[#7F8C8D]">
+                  <td>{e.puesto}</td>
+                  <td className="hidden md:table-cell text-xs text-muted">
                     {e.curp || e.rfc ? (
                       <>
                         {e.curp && <span className="block">{e.curp}</span>}
@@ -161,26 +169,18 @@ export default function EmpleadosPage() {
                       </>
                     ) : "—"}
                   </td>
-                  <td className="py-3">{e.departamento?.nombre || "—"}</td>
-                  <td className="py-3 hidden lg:table-cell">{e.departamento?.organizacion.nombre || "—"}</td>
-                  <td className="py-3">
-                    <span
-                      className="px-2 py-0.5 rounded-full text-xs"
-                      style={{
-                        background: e.activo ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.16)",
-                        color: e.activo ? "var(--color-secondary)" : "var(--color-danger)",
-                      }}
-                    >
-                      {e.activo ? "Activo" : "Inactivo"}
-                    </span>
+                  <td>{e.departamento?.nombre || "—"}</td>
+                  <td className="hidden lg:table-cell">{e.departamento?.organizacion.nombre || "—"}</td>
+                  <td>
+                    <ActivoBadge activo={e.activo} />
                   </td>
-                  <td className="py-3">
+                  <td>
                     <div className="flex flex-col gap-1 text-sm">
-                      <Link href={`/empleados/${e.id}`} className="text-[#2874A6] hover:underline">
+                      <Link href={`/empleados/${e.id}`} className="link-action">
                         Ver expediente
                       </Link>
                       {canManage && e.activo && (
-                        <button type="button" onClick={() => darDeBaja(e)} className="text-left text-red-600 hover:underline text-xs">
+                        <button type="button" onClick={() => darDeBaja(e)} className="text-left link-danger text-xs">
                           Dar de baja
                         </button>
                       )}
@@ -200,6 +200,7 @@ export default function EmpleadosPage() {
           />
         </div>
       )}
+      {ConfirmDialogHost}
     </div>
   );
 }

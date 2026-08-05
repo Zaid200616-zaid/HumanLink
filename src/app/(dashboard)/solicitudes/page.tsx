@@ -10,6 +10,10 @@ import { useSession } from "@/lib/use-session";
 
 import ExpedienteVacacionesPanel from "@/components/ExpedienteVacacionesPanel";
 import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 import Avatar from "@/components/Avatar";
 
@@ -71,8 +75,6 @@ export default function SolicitudesPage() {
 
   const [error, setError] = useState("");
 
-  const [success, setSuccess] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
 
   const [expedienteModal, setExpedienteModal] = useState<Solicitud | null>(null);
@@ -107,8 +109,8 @@ export default function SolicitudesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, estado, accion: "supervisor" }),
     });
-    if (res.ok) showSuccess("Solicitud actualizada por supervisor.");
-    else showError("Permiso denegado o error al actualizar.");
+    if (res.ok) showSuccess(MSG.solicitudActualizada);
+    else showError(MSG.errorPermiso);
     fetchList<Solicitud>("/api/solicitudes?vista=equipo").then(setSolicitudesEquipo);
     cargar();
   }
@@ -149,18 +151,11 @@ export default function SolicitudesPage() {
 
     setError("");
 
-    setSuccess("");
-
 
 
     if (!form.fechaInicio || !form.fechaFin || form.motivo.length < 10) {
-
-      setError("Complete fechas y motivo (mínimo 10 caracteres)");
-
-      showError("Validación fallida: complete fechas y motivo (mínimo 10 caracteres).");
-
+      setError("Complete fechas y motivo (mínimo 10 caracteres).");
       return;
-
     }
 
 
@@ -184,20 +179,11 @@ export default function SolicitudesPage() {
 
 
     if (!res.ok) {
-
-      setError(data.error || "Error al enviar solicitud");
-
-      showError(data.error || "Error al enviar solicitud");
-
+      showError(data.error || MSG.errorGenerico);
       return;
-
     }
 
-
-
-    setSuccess("Solicitud enviada correctamente. RH la revisará pronto.");
-
-    showSuccess("Registro exitoso: solicitud enviada correctamente.");
+    showSuccess(MSG.solicitudEnviada);
 
     setForm(emptyForm);
 
@@ -232,13 +218,13 @@ export default function SolicitudesPage() {
     if (res.ok) {
       showSuccess(
         resolverModal.estado === "APROBADA"
-          ? "Aprobación registrada correctamente."
+          ? MSG.solicitudAprobada
           : resolverModal.estado === "RECHAZADA"
-            ? "Solicitud rechazada."
-            : "Modificación guardada."
+            ? MSG.solicitudRechazada
+            : MSG.solicitudActualizada
       );
     } else {
-      showError("Permiso denegado o error al resolver la solicitud.");
+      showError(MSG.errorPermiso);
     }
 
     setResolverModal(null);
@@ -253,7 +239,7 @@ export default function SolicitudesPage() {
 
 
 
-  if (sessionLoading) return <p>Cargando...</p>;
+  if (sessionLoading) return <LoadingState />;
 
 
 
@@ -261,17 +247,10 @@ export default function SolicitudesPage() {
 
     <div>
 
-      <div className="mb-8">
-
-        <h1 className="page-title">
-
-          Permisos y Vacaciones
-
-        </h1>
-
-        <p className="text-[#7F8C8D]">RF-H13 · RNF-A01 Notificaciones toast en acciones importantes</p>
-
-      </div>
+      <PageHeader
+        title="Permisos y Vacaciones"
+        subtitle="Gestión de permisos, vacaciones y aprobaciones del personal"
+      />
 
 
 
@@ -283,23 +262,23 @@ export default function SolicitudesPage() {
 
             <p className="text-2xl font-bold" style={{ color: "var(--color-primary)" }}>{miExpediente.diasTotales}</p>
 
-            <p className="text-xs text-[#7F8C8D]">Días anuales</p>
+            <p className="text-xs text-muted">Días anuales</p>
 
           </div>
 
           <div>
 
-            <p className="text-2xl font-bold text-[#27AE60]">{miExpediente.diasDisponibles}</p>
+            <p className="text-2xl font-bold text-success">{miExpediente.diasDisponibles}</p>
 
-            <p className="text-xs text-[#7F8C8D]">Disponibles</p>
+            <p className="text-xs text-muted">Disponibles</p>
 
           </div>
 
           <div>
 
-            <p className="text-2xl font-bold text-[#E67E22]">{miExpediente.diasUsados}</p>
+            <p className="text-2xl font-bold text-warning">{miExpediente.diasUsados}</p>
 
-            <p className="text-xs text-[#7F8C8D]">Usados</p>
+            <p className="text-xs text-muted">Usados</p>
 
           </div>
 
@@ -393,7 +372,7 @@ export default function SolicitudesPage() {
 
               onChange={(e) => setForm({ ...form, motivo: e.target.value })}
 
-              placeholder="Describe el motivo de tu solicitud..."
+              placeholder="Indique el motivo de la solicitud"
 
               required
 
@@ -403,9 +382,7 @@ export default function SolicitudesPage() {
 
           </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          {success && <p className="text-[#17A589] text-sm">{success}</p>}
+          {error && <p className="text-danger text-sm">{error}</p>}
 
           <button type="submit" className="btn-primary" disabled={submitting}>
 
@@ -424,14 +401,14 @@ export default function SolicitudesPage() {
           <h2 className="font-semibold mb-4" style={{ color: "var(--color-primary)" }}>Solicitudes de mi equipo (aprobación nivel 1)</h2>
           <div className="space-y-3">
             {solicitudesEquipo.map((s) => (
-              <div key={s.id} className="flex justify-between items-center p-3 bg-[#F4F6F7] rounded-lg">
+              <div key={s.id} className="flex justify-between items-center p-3 bg-[var(--color-surface-2)] rounded-lg">
                 <div>
                   <p className="font-medium">{s.empleado.nombre} {s.empleado.apellidoPaterno} · {s.tipo}</p>
-                  <p className="text-xs text-[#7F8C8D]">{s.diasSolicitados} días · {s.motivo.slice(0, 50)}</p>
+                  <p className="text-xs text-muted">{s.diasSolicitados} días · {s.motivo.slice(0, 50)}</p>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => resolverSupervisor(s.id, "APROBADA")} className="btn-secondary text-sm py-1">Aprobar</button>
-                  <button onClick={() => resolverSupervisor(s.id, "RECHAZADA")} className="btn-outline text-sm py-1 text-red-600">Rechazar</button>
+                  <button onClick={() => resolverSupervisor(s.id, "RECHAZADA")} className="btn-outline text-sm py-1 text-danger">Rechazar</button>
                 </div>
               </div>
             ))}
@@ -440,9 +417,7 @@ export default function SolicitudesPage() {
       )}
 
       <h2 className="font-semibold mb-4">
-
-        {isEmpleado ? "Mis solicitudes" : "Solicitudes del personal"}
-
+        {isEmpleado ? "Mis solicitudes" : isSupervisor ? "Solicitudes de mi equipo" : "Solicitudes del personal"}
       </h2>
 
 
@@ -451,7 +426,7 @@ export default function SolicitudesPage() {
 
         {solicitudes.length === 0 ? (
 
-          <div className="card text-center text-[#7F8C8D]">No hay solicitudes registradas</div>
+          <div className="card text-center text-muted">No hay solicitudes registradas</div>
 
         ) : (
 
@@ -479,7 +454,7 @@ export default function SolicitudesPage() {
 
                         {s.empleado.departamento && (
 
-                          <span className="text-xs text-[#7F8C8D] ml-2">· {s.empleado.departamento.nombre}</span>
+                          <span className="text-xs text-muted ml-2">· {s.empleado.departamento.nombre}</span>
 
                         )}
 
@@ -489,7 +464,7 @@ export default function SolicitudesPage() {
 
                     <p className="text-sm">
 
-                      <span className={`font-medium ${s.tipo === "VACACION" ? "text-[#17A589]" : "text-[#2874A6]"}`}>
+                      <span className={`font-medium ${s.tipo === "VACACION" ? "text-success" : "link-action"}`}>
 
                         {s.tipo}
 
@@ -499,7 +474,7 @@ export default function SolicitudesPage() {
 
                     </p>
 
-                    <p className="text-xs text-[#7F8C8D]">
+                    <p className="text-xs text-muted">
 
                       {new Date(s.fechaInicio).toLocaleDateString("es-MX")} – {new Date(s.fechaFin).toLocaleDateString("es-MX")}
 
@@ -509,7 +484,7 @@ export default function SolicitudesPage() {
 
                     {s.respuesta && s.estado !== "PENDIENTE" && (
 
-                      <p className="text-xs text-[#7F8C8D] italic mt-1">Respuesta: {s.respuesta}</p>
+                      <p className="text-xs text-muted italic mt-1">Respuesta: {s.respuesta}</p>
 
                     )}
 
@@ -519,15 +494,7 @@ export default function SolicitudesPage() {
 
                 <div className="flex items-center gap-2 flex-wrap">
 
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-
-                    s.estado === "PENDIENTE" ? "bg-yellow-100 text-yellow-700" :
-
-                    s.estado === "APROBADA" ? "bg-green-100 text-green-700" :
-
-                    "bg-red-100 text-red-700"
-
-                  }`}>{s.estado}</span>
+                  <StatusBadge estado={s.estado} />
 
                   {canManage && (
 
@@ -565,7 +532,7 @@ export default function SolicitudesPage() {
 
                         onClick={() => setResolverModal({ solicitud: s, estado: "RECHAZADA" })}
 
-                        className="btn-outline text-sm py-1 text-red-600"
+                        className="btn-outline text-sm py-1 text-danger"
 
                       >
 
@@ -641,7 +608,7 @@ export default function SolicitudesPage() {
 
                   onClick={() => setResolverModal({ solicitud: expedienteModal, estado: "RECHAZADA" })}
 
-                  className="btn-outline flex-1 text-red-600"
+                  className="btn-outline flex-1 text-danger"
 
                 >
 
@@ -673,7 +640,7 @@ export default function SolicitudesPage() {
 
             </h3>
 
-            <p className="text-sm text-[#7F8C8D] mb-4">
+            <p className="text-sm text-muted mb-4">
 
               {resolverModal.solicitud.empleado.nombre} · {resolverModal.solicitud.tipo} · {resolverModal.solicitud.diasSolicitados} días
 
@@ -689,7 +656,7 @@ export default function SolicitudesPage() {
 
               onChange={(e) => setRespuestaCustom(e.target.value)}
 
-              placeholder={resolverModal.estado === "APROBADA" ? "Ej: Aprobado conforme a política de vacaciones..." : "Ej: Saldo insuficiente, reprogramar fechas..."}
+              placeholder={resolverModal.estado === "APROBADA" ? "Ej.: Aprobado conforme a la política de vacaciones" : "Ej.: Saldo insuficiente; favor de reprogramar fechas"}
 
             />
 

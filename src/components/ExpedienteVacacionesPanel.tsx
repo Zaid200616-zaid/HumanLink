@@ -56,15 +56,20 @@ interface Props {
   compact?: boolean;
 }
 
+import { resolveEstadoBadge } from "@/lib/estado-badge";
+
 function EstadoBadge({ estado }: { estado: string }) {
+  const { label, variant } = resolveEstadoBadge(estado);
   const styles: Record<string, string> = {
-    PENDIENTE: "bg-yellow-100 text-yellow-700",
-    APROBADA: "bg-green-100 text-green-700",
-    RECHAZADA: "bg-red-100 text-red-700",
+    neutral: "bg-[var(--color-surface-3)] text-muted",
+    primary: "bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] text-[var(--color-primary-light)]",
+    success: "bg-[color-mix(in_srgb,var(--color-secondary)_18%,transparent)] text-[var(--color-secondary)]",
+    danger: "bg-[color-mix(in_srgb,var(--color-danger)_18%,transparent)] text-[var(--color-danger)]",
+    warning: "bg-[color-mix(in_srgb,var(--color-warning)_18%,transparent)] text-[var(--color-warning)]",
   };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[estado] || "bg-gray-100"}`}>
-      {estado}
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[variant] || styles.neutral}`}>
+      {label}
     </span>
   );
 }
@@ -160,7 +165,7 @@ export default function ExpedienteVacacionesPanel({ empleadoId, solicitudId, com
         ) : (
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {data.historialVacaciones.map((v) => (
-              <div key={v.id} className="flex justify-between items-start p-2 bg-[#F4F6F7] rounded text-xs gap-2">
+              <div key={v.id} className="flex justify-between items-start p-2 rounded text-xs gap-2" style={{ background: "var(--color-surface-2)" }}>
                 <div>
                   <p>
                     {new Date(v.fechaInicio).toLocaleDateString("es-MX")} – {new Date(v.fechaFin).toLocaleDateString("es-MX")}
@@ -183,7 +188,7 @@ export default function ExpedienteVacacionesPanel({ empleadoId, solicitudId, com
           </h4>
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {data.historialPermisos.slice(0, 5).map((p) => (
-              <div key={p.id} className="flex justify-between p-2 bg-[#F4F6F7] rounded text-xs">
+              <div key={p.id} className="flex justify-between p-2 rounded text-xs" style={{ background: "var(--color-surface-2)" }}>
                 <span>{new Date(p.fechaInicio).toLocaleDateString("es-MX")} · {p.motivo.slice(0, 40)}...</span>
                 <EstadoBadge estado={p.estado} />
               </div>

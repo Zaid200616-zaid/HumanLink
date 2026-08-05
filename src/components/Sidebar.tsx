@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { getNavForRole } from "@/lib/roles";
+import { fetchJson } from "@/lib/fetch-client";
 
 export default function Sidebar({ open = false, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
@@ -14,12 +15,10 @@ export default function Sidebar({ open = false, onClose }: { open?: boolean; onC
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.rol) setRol(data.rol);
-        if (data.email) setEmail(data.email);
-      });
+    fetchJson<{ rol?: string; email?: string }>("/api/auth/me").then(({ data }) => {
+      if (data?.rol) setRol(data.rol);
+      if (data?.email) setEmail(data.email);
+    });
   }, []);
 
   const navGroups = rol ? getNavForRole(rol) : {};

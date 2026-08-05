@@ -1,4 +1,4 @@
-import { apiSuccess, requireAuth } from "@/lib/api";
+import { apiError, apiSuccess, requireAuth } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -13,18 +13,22 @@ export async function GET() {
     },
   });
 
+  if (!usuario) {
+    return apiError("Usuario no encontrado", 404);
+  }
+
   return apiSuccess({
-    id: usuario?.id,
-    email: usuario?.email,
-    rol: usuario?.rol.nombre,
-    nombreCompleto: usuario?.empleado
+    id: usuario.id,
+    email: usuario.email,
+    rol: usuario.rol?.nombre ?? session!.rol,
+    nombreCompleto: usuario.empleado
       ? `${usuario.empleado.nombre} ${usuario.empleado.apellidoPaterno}${
           usuario.empleado.apellidoMaterno ? ` ${usuario.empleado.apellidoMaterno}` : ""
         }`.trim()
-      : usuario?.email?.split("@")[0] ?? "Usuario",
-    numeroEmpleado: usuario?.empleado?.numeroEmpleado ?? null,
-    fotoUrl: usuario?.empleado?.fotoUrl ?? null,
-    empleado: usuario?.empleado
+      : usuario.email?.split("@")[0] ?? "Usuario",
+    numeroEmpleado: usuario.empleado?.numeroEmpleado ?? null,
+    fotoUrl: usuario.empleado?.fotoUrl ?? null,
+    empleado: usuario.empleado
       ? {
           id: usuario.empleado.id,
           nombre: usuario.empleado.nombre,

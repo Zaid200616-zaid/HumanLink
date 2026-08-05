@@ -4,6 +4,12 @@ import { useSession } from "@/lib/use-session";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MSG_DEPT_SIN_AUTORIZACION } from "@/lib/departamentos-auth";
+import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import ActivoBadge from "@/components/ui/ActivoBadge";
+import PageHeader from "@/components/ui/PageHeader";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Depto = {
   id: number;
@@ -34,12 +40,13 @@ const formVacío = {
 
 export default function DepartamentosPage() {
   const { user } = useSession();
+  const { showSuccess, showError } = useToast();
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
   const puedeEscribir = user?.rol === "Administrador" || user?.rol === "Supervisor";
   const [depts, setDepts] = useState<Depto[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [form, setForm] = useState(formVacío);
   const [editId, setEditId] = useState<number | null>(null);
-  const [msg, setMsg] = useState("");
   const [authMsg, setAuthMsg] = useState("");
   const [bitacora, setBitacora] = useState<Array<{ usuario: string; fecha: string; hora: string; accion: string; departamento: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -86,11 +93,11 @@ export default function DepartamentosPage() {
     });
     const d = await res.json();
     if (!res.ok) {
-      setMsg(d.error || "Error al guardar");
+      showError(d.error || MSG.errorGenerico);
       if (res.status === 403) setAuthMsg(d.error || MSG_DEPT_SIN_AUTORIZACION);
       return;
     }
-    setMsg(editId ? "Departamento actualizado" : "Departamento registrado");
+    showSuccess(editId ? MSG.departamentoActualizado : MSG.departamentoCreado);
     setForm(formVacío);
     setEditId(null);
     cargar();
@@ -121,7 +128,12 @@ export default function DepartamentosPage() {
       setAuthMsg(MSG_DEPT_SIN_AUTORIZACION);
       return;
     }
-    if (!confirm(d._count.empleados || d._count.vacantes ? "¿Desactivar o eliminar según reglas del sistema?" : "¿Eliminar departamento?")) return;
+    const desactivar = d._count.empleados || d._count.vacantes;
+    const ok = await confirm(
+      desactivar ? "Desactivar departamento" : "Eliminar departamento",
+      desactivar ? "¿Desactivar o eliminar según reglas del sistema?" : "¿Eliminar departamento?"
+    );
+    if (!ok) return;
     const res = await fetch(`/api/departamentos/${d.id}`, { method: "DELETE" });
     if (res.ok) cargar();
   }
@@ -131,12 +143,10 @@ export default function DepartamentosPage() {
       {authMsg && (
         <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm">{authMsg}</div>
       )}
-      <div>
-        <h1 className="page-title">
-          Gestión de Departamentos
-        </h1>
-        <p className="text-sm text-[#7F8C8D] mt-1">RF-H19 · RNF-08 Seguridad · Solo Admin/Supervisor pueden modificar</p>
-      </div>
+      <PageHeader
+        title="Gestión de Departamentos"
+        subtitle="Organigrama, responsables y vacantes por área"
+      />
 
       {!puedeEscribir && user && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-950 px-4 py-3 text-sm">
@@ -180,7 +190,7 @@ export default function DepartamentosPage() {
         <div>
           <label className="label-field">Cantidad de vacantes (máx.)</label>
           <input type="number" min={0} className="input-field w-full" value={form.cantidadVacantes} onChange={(e) => setForm({ ...form, cantidadVacantes: e.target.value })} />
-          <p className="text-xs text-[#7F8C8D] mt-1">0 = sin límite</p>
+          <p className="text-xs text-muted mt-1">0 = sin límite</p>
         </div>
         <div>
           <label className="label-field">Ubicación (opcional)</label>
@@ -198,13 +208,12 @@ export default function DepartamentosPage() {
               Cancelar
             </button>
           )}
-          {msg && <span className="text-sm text-[#7F8C8D]">{msg}</span>}
         </div>
       </form>
 
       <div className="hl-table-shell">
         {loading ? (
-          <p className="p-5 text-[#7F8C8D]">Cargando…</p>
+          <LoadingState label="Cargando departamentos…" />
         ) : (
           <div className="hl-table-wrap">
             <table className="hl-table min-w-[800px]">
@@ -230,15 +239,15 @@ export default function DepartamentosPage() {
                     <td className="text-center">{d._count.vacantes}</td>
                     <td className="text-center">{d.cantidadVacantes > 0 ? d.cantidadVacantes : "—"}</td>
                     <td>
-                      <span className="hl-badge hl-badge-success">{d.activo ? "Activo" : "Inactivo"}</span>
+                      <ActivoBadge activo={d.activo} />
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <Link href={`/departamentos/${d.id}`} className="text-[#2874A6] hover:underline">Ver detalle</Link>
+                        <Link href={`/departamentos/${d.id}`} className="link-action">Ver detalle</Link>
                         {puedeEscribir && (
                           <>
-                            <button type="button" onClick={() => editar(d)} className="text-[#2874A6] hover:underline">Editar</button>
-                            <button type="button" onClick={() => eliminar(d)} className="text-red-600 hover:underline">Eliminar</button>
+                            <button type="button" onClick={() => editar(d)} className="link-action">Editar</button>
+                            <button type="button" onClick={() => eliminar(d)} className="link-danger">Eliminar</button>
                           </>
                         )}
                       </div>
@@ -282,6 +291,7 @@ export default function DepartamentosPage() {
           </div>
         </section>
       )}
+      {ConfirmDialogHost}
     </div>
   );
 }

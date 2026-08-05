@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/format-date";
+import PageHeader from "@/components/ui/PageHeader";
 
 type Historial = {
   id: number;
@@ -20,10 +22,12 @@ export default function HistorialReportesPage() {
 
   return (
     <div>
-      <Link href="/reportes" className="text-sm text-[#2874A6] hover:underline">← Volver a reportes</Link>
-      <div className="mb-8 mt-4">
-        <h1 className="page-title">Historial de reportes</h1>
-        <p className="text-[#7F8C8D]">RF-H08 · Reportes generados por mes</p>
+      <Link href="/reportes" className="text-sm link-action hover:underline">← Volver a reportes</Link>
+      <div className="mt-4">
+        <PageHeader
+          title="Historial de reportes"
+          subtitle="Reportes generados por mes"
+        />
       </div>
 
       <div className="hl-table-shell">
@@ -40,7 +44,7 @@ export default function HistorialReportesPage() {
           <tbody>
             {items.map((h) => (
               <tr key={h.id}>
-                <td>{new Date(h.createdAt).toLocaleString("es-MX")}</td>
+                <td>{formatDateTime(h.createdAt)}</td>
                 <td>{h.mes}</td>
                 <td>{h.tipo}</td>
                 <td>
@@ -51,7 +55,7 @@ export default function HistorialReportesPage() {
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={4} className="hl-table-empty">Sin reportes generados aún</td></tr>
+              <tr><td colSpan={4} className="hl-table-empty">Aún no se han generado reportes en este periodo</td></tr>
             )}
           </tbody>
         </table>

@@ -151,7 +151,7 @@ body {
   }
   .page-subtitle {
     color: var(--color-muted);
-    @apply text-sm mt-1 mb-6;
+    @apply text-sm mt-1;
   }
   .page-header-actions {
     @apply flex flex-wrap gap-2;
@@ -159,8 +159,32 @@ body {
   .text-muted {
     color: var(--color-muted);
   }
+  .text-primary {
+    color: var(--color-primary-light);
+  }
+  .text-danger {
+    color: var(--color-danger);
+  }
+  .text-warning {
+    color: var(--color-warning);
+  }
   .text-success {
     color: var(--color-secondary);
+  }
+  .link-action {
+    color: var(--color-primary-light);
+    @apply hover:underline;
+  }
+  .link-danger {
+    color: var(--color-danger);
+    @apply hover:underline;
+  }
+  .hl-surface-muted {
+    background: var(--color-surface-2);
+  }
+  .hl-row-selected {
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)) !important;
+    border: 1px solid var(--color-primary);
   }
   .form-alert-error {
     color: var(--color-danger);
@@ -274,6 +298,64 @@ body {
   .hl-badge-warning {
     background: rgba(245, 158, 11, 0.18);
     color: #fcd34d;
+  }
+
+  .hl-loading {
+    @apply flex flex-col items-center justify-center gap-3 py-12;
+    color: var(--color-muted);
+  }
+  .hl-loading-compact {
+    @apply py-6;
+  }
+  .hl-loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: hl-spin 0.7s linear infinite;
+  }
+  @keyframes hl-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .hl-toast-container {
+    @apply fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm pointer-events-none;
+  }
+  .hl-toast {
+    @apply pointer-events-auto flex items-start gap-2 px-4 py-3 rounded-lg shadow-lg text-sm;
+    color: #fff;
+  }
+  .hl-toast-close {
+    @apply opacity-80 hover:opacity-100 shrink-0;
+  }
+  .hl-toast-success {
+    background: var(--color-secondary);
+  }
+  .hl-toast-error {
+    background: var(--color-danger);
+  }
+  .hl-toast-warning {
+    background: var(--color-warning);
+    color: #1f2733;
+  }
+  .hl-toast-info {
+    background: var(--color-primary);
+  }
+
+  .hl-dropzone {
+    @apply rounded-lg border-2 border-dashed p-4 text-center text-sm transition-colors;
+    border-color: var(--color-border);
+  }
+  .hl-dropzone-active {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+  .hl-progress-fill {
+    background: var(--color-primary);
+    @apply h-full transition-all;
   }
 
   .hl-modal-backdrop {
@@ -600,4 +682,17 @@ button {
 .session-indicator-emp {
   @apply text-[11px] truncate;
   color: var(--color-muted);
+}
+
+/* Landing público: inputs sobre fondo claro (modal Postularme, contacto) */
+.landing-root .hl-form-field input,
+.landing-root .hl-form-field textarea,
+.landing-root .hl-form-field select,
+.landing-root .hl-modal input:not([type="checkbox"]):not([type="radio"]),
+.landing-root .hl-modal textarea,
+.landing-root .hl-modal select {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000;
+  caret-color: #000000;
+  background-color: #ffffff !important;
 }

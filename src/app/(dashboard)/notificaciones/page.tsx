@@ -3,6 +3,24 @@
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { useSession } from "@/lib/use-session";
+import { formatDateTime } from "@/lib/format-date";
+
+const TIPO_NOTIFICACION: Record<string, string> = {
+  SISTEMA: "Sistema",
+  CAPACITACION: "Capacitación",
+  SOLICITUD: "Solicitud",
+  CONTRATACION: "Contratación",
+  EVALUACION: "Evaluación",
+  QUEJA: "Queja laboral",
+  EVENTO: "Evento",
+};
+
+function labelTipoNotificacion(tipo: string): string {
+  return TIPO_NOTIFICACION[tipo] ?? tipo;
+}
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 interface Notificacion {
   id: number;
@@ -23,6 +41,7 @@ export default function NotificacionesPage() {
   const [usuarios, setUsuarios] = useState<UsuarioOpt[]>([]);
   const [form, setForm] = useState({ usuarioId: "", titulo: "", mensaje: "", tipo: "SISTEMA" });
   const [editId, setEditId] = useState<number | null>(null);
+  const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   function cargar() {
     const url = canManage ? "/api/notificaciones?gestion=1" : "/api/notificaciones";
@@ -65,17 +84,18 @@ export default function NotificacionesPage() {
   }
 
   async function eliminar(id: number) {
-    if (!confirm("¿Eliminar notificación?")) return;
+    const ok = await confirm("Eliminar notificación", "¿Eliminar notificación?");
+    if (!ok) return;
     await fetch(`/api/notificaciones?id=${id}`, { method: "DELETE" });
     cargar();
   }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="page-title">Notificaciones</h1>
-        <p className="text-[#7F8C8D]">RF-H10 · {canManage ? "Administración de alertas" : "Mis alertas"}</p>
-      </div>
+      <PageHeader
+        title="Notificaciones"
+        subtitle={canManage ? "Administración de alertas del personal" : "Tus alertas y avisos recientes"}
+      />
 
       {canManage && (
         <form onSubmit={guardar} className="card mb-6 space-y-3">
@@ -88,9 +108,9 @@ export default function NotificacionesPage() {
               ))}
             </select>
           )}
-          <input className="input-field w-full" placeholder="Título" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
-          <textarea className="input-field w-full min-h-[80px]" placeholder="Mensaje" value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} required />
-          <input className="input-field w-full" placeholder="Tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} />
+          <input className="input-field w-full" placeholder="Asunto del aviso" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
+          <textarea className="input-field w-full min-h-[80px]" placeholder="Mensaje para el destinatario" value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} required />
+          <input className="input-field w-full" placeholder="Categoría: Sistema, Capacitación, Solicitud…" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} />
           <button type="submit" className="btn-primary text-sm">{editId ? "Guardar" : "Crear"}</button>
         </form>
       )}
@@ -98,29 +118,33 @@ export default function NotificacionesPage() {
       <div className="space-y-3">
         {notifs.map((n) => (
           <div key={n.id} className="card flex gap-4" style={!n.leida ? { borderLeft: "4px solid var(--color-primary)" } : undefined}>
-            <Bell size={20} style={{ color: n.leida ? "#7F8C8D" : "var(--color-primary)" }} />
+            <Bell size={20} className={n.leida ? "text-muted" : "text-[var(--color-primary)]"} />
             <div className="flex-1">
-              <p className="font-medium">{n.titulo}</p>
-              <p className="text-sm text-[#7F8C8D]">{n.mensaje}</p>
-              <p className="text-xs text-[#7F8C8D] mt-1">
-                {new Date(n.createdAt).toLocaleString("es-MX")} · {n.tipo}
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium">{n.titulo}</p>
+                {!n.leida && <Badge variant="primary">Nueva</Badge>}
+              </div>
+              <p className="text-sm text-muted">{n.mensaje}</p>
+              <p className="text-xs text-muted mt-1">
+                {formatDateTime(n.createdAt)} · {labelTipoNotificacion(n.tipo)}
                 {n.usuario && ` · ${n.usuario.email}`}
               </p>
             </div>
             <div className="flex flex-col gap-1 text-sm">
               {!n.leida && (
-                <button type="button" onClick={() => marcarLeida(n.id)} className="text-[#2874A6] hover:underline">Marcar leída</button>
+                <button type="button" onClick={() => marcarLeida(n.id)} className="text-[var(--color-primary)] hover:underline">Marcar leída</button>
               )}
               {canManage && (
                 <>
-                  <button type="button" className="text-[#2874A6] hover:underline" onClick={() => { setEditId(n.id); setForm({ usuarioId: "", titulo: n.titulo, mensaje: n.mensaje, tipo: n.tipo }); }}>Editar</button>
-                  <button type="button" className="text-red-600 hover:underline" onClick={() => eliminar(n.id)}>Eliminar</button>
+                  <button type="button" className="text-[var(--color-primary)] hover:underline" onClick={() => { setEditId(n.id); setForm({ usuarioId: "", titulo: n.titulo, mensaje: n.mensaje, tipo: n.tipo }); }}>Editar</button>
+                  <button type="button" className="link-danger" onClick={() => eliminar(n.id)}>Eliminar</button>
                 </>
               )}
             </div>
           </div>
         ))}
       </div>
+      {ConfirmDialogHost}
     </div>
   );
 }

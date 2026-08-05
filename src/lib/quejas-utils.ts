@@ -1,14 +1,10 @@
 /** Días desde el registro (RNF-PQ01). */
-export function diasDesdeRegistro(createdAt: string | Date): number {
-  const start = new Date(createdAt);
-  const now = new Date();
-  const ms = now.getTime() - start.getTime();
-  return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
-}
+export { diasDesde as diasDesdeRegistro, etiquetaRelativa } from "@/lib/format-date";
 
+/** Etiqueta relativa a partir de días transcurridos (lista de quejas). */
 export function etiquetaAntiguedad(dias: number): string {
   if (dias === 0) return "Hoy";
-  if (dias === 1) return "Hace 1 día";
+  if (dias === 1) return "Ayer";
   return `Hace ${dias} días`;
 }
 

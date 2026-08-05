@@ -21,7 +21,7 @@ export const DEMO_USERS = [
 
     label: "Recursos Humanos",
 
-    email: "0324108067@ut-tijuana.edu.mx",
+    email: "ernesto.gutierrez@humanlink.mx",
 
     rol: "Recursos Humanos",
 
@@ -45,7 +45,7 @@ export const DEMO_USERS = [
 
     label: "Empleado",
 
-    email: "0324108126@ut-tijuana.edu.mx",
+    email: "ramses.dejesus@humanlink.mx",
 
     rol: "Empleado",
 
@@ -57,7 +57,7 @@ export const DEMO_USERS = [
 
     label: "Empleada",
 
-    email: "0324108073@ut-tijuana.edu.mx",
+    email: "carol.olaiz@humanlink.mx",
 
     rol: "Empleado",
 
@@ -90,7 +90,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Inicio", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
   { href: "/perfil", label: "Mi Perfil", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
   { href: "/buscar", label: "Búsqueda", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
-  { href: "/notificaciones", label: "Notificaciones", group: "General", roles: ["Administrador", "Recursos Humanos"] },
+  { href: "/notificaciones", label: "Notificaciones", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
 
 
 
@@ -128,7 +128,7 @@ export const NAV_ITEMS: NavItem[] = [
 
   { href: "/reportes", label: "Reportes", group: "Administración", roles: ["Administrador", "Recursos Humanos", "Supervisor"] },
 
-  { href: "/reportes/historial", label: "Historial reportes", group: "Administración", roles: ["Administrador", "Recursos Humanos"] },
+  { href: "/reportes/historial", label: "Historial de reportes", group: "Administración", roles: ["Administrador", "Recursos Humanos"] },
 
   { href: "/permisos-rol", label: "Asignación de roles", group: "Administración", roles: ["Administrador"] },
 

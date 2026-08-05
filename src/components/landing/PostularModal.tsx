@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { X } from "lucide-react";
 
 export type VacantePublica = {
@@ -19,6 +19,17 @@ type Props = {
   vacante: VacantePublica | null;
   onClose: () => void;
 };
+
+const fieldClass =
+  "!text-black !bg-white caret-black [color:#000!important] [-webkit-text-fill-color:#000]";
+
+const fieldStyle: CSSProperties = {
+  color: "#000000",
+  WebkitTextFillColor: "#000000",
+  backgroundColor: "#ffffff",
+};
+
+const fieldProps = { className: fieldClass, style: fieldStyle };
 
 export default function PostularModal({ vacante, onClose }: Props) {
   const [form, setForm] = useState({
@@ -100,6 +111,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Nombre *</label>
                 <input
+                  {...fieldProps}
                   value={form.nombre}
                   onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                   required
@@ -108,6 +120,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Apellido paterno *</label>
                 <input
+                  {...fieldProps}
                   value={form.apellidoPaterno}
                   onChange={(e) => setForm({ ...form, apellidoPaterno: e.target.value })}
                   required
@@ -116,6 +129,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Apellido materno</label>
                 <input
+                  {...fieldProps}
                   value={form.apellidoMaterno}
                   onChange={(e) => setForm({ ...form, apellidoMaterno: e.target.value })}
                 />
@@ -123,6 +137,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Correo *</label>
                 <input
+                  {...fieldProps}
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -132,6 +147,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Teléfono</label>
                 <input
+                  {...fieldProps}
                   value={form.telefono}
                   onChange={(e) => setForm({ ...form, telefono: e.target.value })}
                 />
@@ -139,6 +155,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Dirección</label>
                 <input
+                  {...fieldProps}
                   value={form.direccion}
                   onChange={(e) => setForm({ ...form, direccion: e.target.value })}
                 />
@@ -146,6 +163,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Escolaridad</label>
                 <input
+                  {...fieldProps}
                   value={form.escolaridad}
                   onChange={(e) => setForm({ ...form, escolaridad: e.target.value })}
                 />
@@ -153,6 +171,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Experiencia</label>
                 <textarea
+                  {...fieldProps}
                   rows={3}
                   value={form.experiencia}
                   onChange={(e) => setForm({ ...form, experiencia: e.target.value })}
@@ -160,15 +179,16 @@ export default function PostularModal({ vacante, onClose }: Props) {
               </div>
               <div className="hl-form-field">
                 <label>CURP (opcional)</label>
-                <input value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} />
+                <input {...fieldProps} value={form.curp} onChange={(e) => setForm({ ...form, curp: e.target.value })} />
               </div>
               <div className="hl-form-field">
                 <label>RFC (opcional)</label>
-                <input value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value })} />
+                <input {...fieldProps} value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value })} />
               </div>
               <div className="hl-form-field">
                 <label>Currículum PDF *</label>
                 <input
+                  {...fieldProps}
                   type="file"
                   accept="application/pdf"
                   onChange={(e) => setCurriculum(e.target.files?.[0] ?? null)}
@@ -178,6 +198,7 @@ export default function PostularModal({ vacante, onClose }: Props) {
               <div className="hl-form-field">
                 <label>Carta de presentación PDF (opcional)</label>
                 <input
+                  {...fieldProps}
                   type="file"
                   accept="application/pdf"
                   onChange={(e) => setCarta(e.target.files?.[0] ?? null)}

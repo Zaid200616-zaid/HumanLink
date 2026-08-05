@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchList } from "@/lib/fetch-client";
 import { useSession } from "@/lib/use-session";
 import { useToast } from "@/components/ToastProvider";
+import { MSG } from "@/lib/ui-messages";
+import LoadingState from "@/components/ui/LoadingState";
+import { formatDateTime } from "@/lib/format-date";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable, { type Column } from "@/components/ui/DataTable";
 import Modal from "@/components/ui/Modal";
@@ -60,7 +63,6 @@ export default function QuejasPage() {
 
   const [detalle, setDetalle] = useState<Queja | null>(null);
   const [soloLectura, setSoloLectura] = useState(false);
-  const [dialogBloqueo, setDialogBloqueo] = useState(false);
   const [estadoEdit, setEstadoEdit] = useState("");
   const [seguimientoEdit, setSeguimientoEdit] = useState("");
   const [historial, setHistorial] = useState<HistorialRow[]>([]);
@@ -134,7 +136,7 @@ export default function QuejasPage() {
       showError(data.error || "No se pudo registrar la queja.");
       return;
     }
-    showSuccess("Queja registrada correctamente.");
+    showSuccess(MSG.quejaRegistrada);
     setForm(emptyForm);
     clear();
     cargar();
@@ -146,25 +148,18 @@ export default function QuejasPage() {
     setHistorial(Array.isArray(data) ? data : []);
   }
 
-  function abrirDetalle(q: Queja, forzarLectura = false) {
-    if (canManage && quejaEstaCerrada(q.estado) && !forzarLectura) {
-      setDetalle(q);
-      setDialogBloqueo(true);
-      setSoloLectura(true);
-      cargarHistorial(q.id);
-      return;
-    }
+  function abrirDetalle(q: Queja) {
+    const cerrada = quejaEstaCerrada(q.estado);
     setDetalle(q);
     setEstadoEdit(q.estado);
     setSeguimientoEdit(q.seguimiento || "");
-    setSoloLectura(forzarLectura || quejaEstaCerrada(q.estado));
-    setDialogBloqueo(false);
+    setSoloLectura(cerrada);
     cargarHistorial(q.id);
   }
 
   async function guardarSeguimiento() {
     if (!detalle || soloLectura || quejaEstaCerrada(detalle.estado)) {
-      setDialogBloqueo(true);
+      showError(MSG_BLOQUEO);
       return;
     }
     const res = await fetch("/api/quejas", {
@@ -178,15 +173,15 @@ export default function QuejasPage() {
     });
     const data = await res.json().catch(() => ({}));
     if (res.status === 403) {
-      setDialogBloqueo(true);
       showError(MSG_BLOQUEO);
+      setSoloLectura(true);
       return;
     }
     if (!res.ok) {
       showError(data.error || "No se pudo guardar el seguimiento.");
       return;
     }
-    showSuccess("Estado de la queja actualizado.");
+    showSuccess(MSG.quejaActualizada);
     cargar();
     setDetalle(null);
   }
@@ -204,7 +199,7 @@ export default function QuejasPage() {
         return (
           <div className="space-y-1">
             <span className="font-medium">{q.asunto}</span>
-            {!quejaResolucionFinal(q.estado) && <span className={pillClass}>{etiquetaAntiguedad(dias)}</span>}
+            <span className={pillClass}>{etiquetaAntiguedad(dias)}</span>
           </div>
         );
       },
@@ -243,13 +238,13 @@ export default function QuejasPage() {
     },
   ];
 
-  if (sessionLoading) return <p className="page-subtitle">Cargando…</p>;
+  if (sessionLoading) return <LoadingState />;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Quejas laborales"
-        subtitle="RF-H16 · RNF-PQ01 antigüedad · Historial de estados · Validación en tiempo real"
+        title="Quejas Laborales"
+        subtitle="Registro, seguimiento y resolución de incidencias laborales"
       />
 
       {isEmpleado && (
@@ -324,7 +319,7 @@ export default function QuejasPage() {
       />
 
       <Modal
-        open={!!detalle && !dialogBloqueo}
+        open={!!detalle}
         title={soloLectura ? "Detalle de queja (solo lectura)" : "Detalle y seguimiento"}
         onClose={() => setDetalle(null)}
         size="lg"
@@ -343,6 +338,11 @@ export default function QuejasPage() {
       >
         {detalle && (
           <div className="space-y-4 text-sm">
+            {soloLectura && quejaEstaCerrada(detalle.estado) && (
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                {MSG_BLOQUEO}
+              </p>
+            )}
             <FormControl label="Asunto" name="det-asunto">
               <input className="input-field w-full" value={detalle.asunto} disabled readOnly />
             </FormControl>
@@ -355,7 +355,7 @@ export default function QuejasPage() {
             </p>
             <p>
               <span className="text-[var(--color-muted)]">Registro: </span>
-              {new Date(detalle.createdAt).toLocaleString("es-MX")}
+              {formatDateTime(detalle.createdAt)}
             </p>
             {canManage && (
               <>
@@ -403,41 +403,6 @@ export default function QuejasPage() {
             )}
           </div>
         )}
-      </Modal>
-
-      <Modal
-        open={dialogBloqueo}
-        title="Edición bloqueada"
-        onClose={() => {
-          setDialogBloqueo(false);
-          if (!soloLectura) setDetalle(null);
-        }}
-        footer={
-          <>
-            <button
-              type="button"
-              className="btn-outline text-sm"
-              onClick={() => {
-                setDialogBloqueo(false);
-                setSoloLectura(true);
-              }}
-            >
-              Ver como solo lectura
-            </button>
-            <button
-              type="button"
-              className="btn-primary text-sm"
-              onClick={() => {
-                setDialogBloqueo(false);
-                setDetalle(null);
-              }}
-            >
-              Entendido
-            </button>
-          </>
-        }
-      >
-        <p>{MSG_BLOQUEO}</p>
       </Modal>
     </div>
   );

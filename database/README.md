@@ -5,8 +5,8 @@ Prisma sigue gestionando el esquema; estos scripts se aplican **manualmente** so
 
 ## Requisitos
 
-- MySQL 8.0+
-- Base `humanlink` creada (`database/setup_mysql.sql`)
+- MySQL 8.0+ o MariaDB 10.6+
+- Base `humanlink` creada (`database/setup_mysql.sql`) — ver [README.md](../README.md) para Windows/Linux
 - Migración Prisma aplicada (`npm run db:migrate`)
 
 ## Orden de instalación
@@ -28,10 +28,12 @@ Ver guía completa: `database/demostracion_exposicion.md`
 | Archivo | Contenido |
 |---------|-----------|
 | `setup_mysql.sql` | Crear BD y usuario |
-| `triggers_mysql.sql` | 11 triggers documentados (3 obligatorios RF) |
-| `procedures_mysql.sql` | 10+ procedimientos almacenados |
-| `views_mysql.sql` | 8 vistas administrativas |
-| `advanced_queries.sql` | 10+ consultas avanzadas |
+| `fix_grants.sql` | Reparar permisos del usuario `humanlink` |
+| `reset_database.sql` | Reinicio limpio (BD corrupta / tablespace huérfano) |
+| `triggers_mysql.sql` | 12 triggers + función `fn_dias_vacaciones_lft` (3 obligatorios RF) |
+| `procedures_mysql.sql` | 12 procedimientos almacenados |
+| `views_mysql.sql` | 9 vistas administrativas |
+| `advanced_queries.sql` | 12 consultas avanzadas |
 | `indexes_mysql.sql` | Inventario de índices del esquema |
 | `calculated_fields.md` | Campos calculados y fórmulas |
 | `demostracion_exposicion.md` | Guía paso a paso para la exposición |
