@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess, requireAuth } from "@/lib/api";
+import { parsePermisos, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { sincronizarAsistenciasSolicitud } from "@/lib/asistencias-sync";
@@ -238,9 +239,18 @@ export async function PATCH(request: NextRequest) {
     return apiSuccess(solicitud);
   }
 
-  // Aprobación RH
-  const { error: rhError } = await requireAuth("solicitudes:*");
-  if (rhError) return rhError;
+  // Aprobación RH / Administrador (permisos vigentes desde BD, no solo JWT)
+  const usuarioAutorizador = await prisma.usuario.findUnique({
+    where: { id: session!.userId },
+    select: { rol: { select: { nombre: true, permisos: true } } },
+  });
+  const rolAutorizador = usuarioAutorizador?.rol?.nombre;
+  const permisosAutorizador = parsePermisos(usuarioAutorizador?.rol?.permisos ?? "[]");
+  const puedeGestionarRH =
+    (rolAutorizador === "Administrador" || rolAutorizador === "Recursos Humanos") &&
+    hasPermission(permisosAutorizador, "solicitudes:*");
+
+  if (!puedeGestionarRH) return apiError("Sin permisos", 403);
   if (!estado) return apiError("estado requerido");
 
   if (

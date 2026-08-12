@@ -110,7 +110,10 @@ export default function SolicitudesPage() {
       body: JSON.stringify({ id, estado, accion: "supervisor" }),
     });
     if (res.ok) showSuccess(MSG.solicitudActualizada);
-    else showError(MSG.errorPermiso);
+    else {
+      const data = await res.json().catch(() => ({}));
+      showError(data.error || MSG.errorGenerico);
+    }
     fetchList<Solicitud>("/api/solicitudes?vista=equipo").then(setSolicitudesEquipo);
     cargar();
   }
@@ -224,7 +227,8 @@ export default function SolicitudesPage() {
             : MSG.solicitudActualizada
       );
     } else {
-      showError(MSG.errorPermiso);
+      const data = await res.json().catch(() => ({}));
+      showError(data.error || MSG.errorGenerico);
     }
 
     setResolverModal(null);

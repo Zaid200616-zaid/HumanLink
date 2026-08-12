@@ -1,0 +1,60 @@
+[1mdiff --git a/src/app/(dashboard)/solicitudes/page.tsx b/src/app/(dashboard)/solicitudes/page.tsx[m
+[1mindex ff8ba02..aa5cf61 100644[m
+[1m--- a/src/app/(dashboard)/solicitudes/page.tsx[m
+[1m+++ b/src/app/(dashboard)/solicitudes/page.tsx[m
+[36m@@ -110,7 +110,10 @@[m [mexport default function SolicitudesPage() {[m
+       body: JSON.stringify({ id, estado, accion: "supervisor" }),[m
+     });[m
+     if (res.ok) showSuccess(MSG.solicitudActualizada);[m
+[31m-    else showError(MSG.errorPermiso);[m
+[32m+[m[32m    else {[m
+[32m+[m[32m      const data = await res.json().catch(() => ({}));[m
+[32m+[m[32m      showError(data.error || MSG.errorGenerico);[m
+[32m+[m[32m    }[m
+     fetchList<Solicitud>("/api/solicitudes?vista=equipo").then(setSolicitudesEquipo);[m
+     cargar();[m
+   }[m
+[36m@@ -224,7 +227,8 @@[m [mexport default function SolicitudesPage() {[m
+             : MSG.solicitudActualizada[m
+       );[m
+     } else {[m
+[31m-      showError(MSG.errorPermiso);[m
+[32m+[m[32m      const data = await res.json().catch(() => ({}));[m
+[32m+[m[32m      showError(data.error || MSG.errorGenerico);[m
+     }[m
+ [m
+     setResolverModal(null);[m
+[1mdiff --git a/src/app/api/solicitudes/route.ts b/src/app/api/solicitudes/route.ts[m
+[1mindex 61bc7da..b49af21 100644[m
+[1m--- a/src/app/api/solicitudes/route.ts[m
+[1m+++ b/src/app/api/solicitudes/route.ts[m
+[36m@@ -1,6 +1,7 @@[m
+ import { NextRequest } from "next/server";[m
+ import { z } from "zod";[m
+ import { apiError, apiSuccess, requireAuth } from "@/lib/api";[m
+[32m+[m[32mimport { parsePermisos, hasPermission } from "@/lib/auth";[m
+ import { prisma } from "@/lib/prisma";[m
+ import { registrarAuditoria } from "@/lib/auditoria";[m
+ import { sincronizarAsistenciasSolicitud } from "@/lib/asistencias-sync";[m
+[36m@@ -238,9 +239,18 @@[m [mexport async function PATCH(request: NextRequest) {[m
+     return apiSuccess(solicitud);[m
+   }[m
+ [m
+[31m-  // Aprobación RH[m
+[31m-  const { error: rhError } = await requireAuth("solicitudes:*");[m
+[31m-  if (rhError) return rhError;[m
+[32m+[m[32m  // Aprobación RH / Administrador (permisos vigentes desde BD, no solo JWT)[m
+[32m+[m[32m  const usuarioAutorizador = await prisma.usuario.findUnique({[m
+[32m+[m[32m    where: { id: session!.userId },[m
+[32m+[m[32m    select: { rol: { select: { nombre: true, permisos: true } } },[m
+[32m+[m[32m  });[m
+[32m+[m[32m  const rolAutorizador = usuarioAutorizador?.rol?.nombre;[m
+[32m+[m[32m  const permisosAutorizador = parsePermisos(usuarioAutorizador?.rol?.permisos ?? "[]");[m
+[32m+[m[32m  const puedeGestionarRH =[m
+[32m+[m[32m    (rolAutorizador === "Administrador" || rolAutorizador === "Recursos Humanos") &&[m
+[32m+[m[32m    hasPermission(permisosAutorizador, "solicitudes:*");[m
+[32m+[m
+[32m+[m[32m  if (!puedeGestionarRH) return apiError("Sin permisos", 403);[m
+   if (!estado) return apiError("estado requerido");[m
+ [m
+   if ([m
