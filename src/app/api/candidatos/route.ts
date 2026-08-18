@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiError, apiSuccess, requireAuth } from "@/lib/api";
+import { apiError, apiSuccess, requireAuth, handlePrismaError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { notificarUsuarioId } from "@/lib/email";
 
@@ -103,17 +103,22 @@ export async function POST(request: NextRequest) {
     return apiError("Todos los cupos están temporalmente reservados", 409);
   }
 
-  const candidato = await prisma.$transaction(async (tx) => {
-    await tx.vacante.update({
-      where: { id: vacante.id },
-      data: { cupoBloqueado: { increment: 1 } },
-    });
+  let candidato;
+  try {
+    candidato = await prisma.$transaction(async (tx) => {
+      await tx.vacante.update({
+        where: { id: vacante.id },
+        data: { cupoBloqueado: { increment: 1 } },
+      });
 
-    return tx.candidato.create({
-      data: { ...data, email: data.email.trim().toLowerCase() },
-      include: { vacante: { include: { departamento: true } } },
+      return tx.candidato.create({
+        data: { ...data, email: data.email.trim().toLowerCase() },
+        include: { vacante: { include: { departamento: true } } },
+      });
     });
-  });
+  } catch (e) {
+    return handlePrismaError(e);
+  }
 
   await prisma.vacante.update({
     where: { id: vacante.id },

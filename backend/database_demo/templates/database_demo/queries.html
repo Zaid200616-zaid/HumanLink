@@ -1,0 +1,37 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="hl-card">
+  <h2>Consultas avanzadas Q1–Q12</h2>
+  <p class="hl-muted">
+    SQL cargado desde <code>database/advanced_queries.sql</code>.
+    Seleccione una consulta y ejecútela bajo demanda (solo SELECT).
+  </p>
+
+  <form method="get" class="demo-inline-form" style="margin-bottom: 1rem;">
+    <div class="hl-form-row">
+      <label for="q">Consulta</label>
+      <select name="q" id="q" onchange="this.form.submit()">
+        {% for qid, title in query_options %}
+        <option value="{{ qid }}" {% if qid == selected_q %}selected{% endif %}>{{ qid }} — {{ title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  <h3>{{ selected_q }} · {{ query_meta.title }}</h3>
+  <pre class="hl-sql">{{ query_meta.sql }}</pre>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="run_query">
+    <input type="hidden" name="q" value="{{ selected_q }}">
+    <button type="submit" class="hl-btn hl-btn-primary">Ejecutar {{ selected_q }}</button>
+  </form>
+
+  {% if outcome %}
+  <h3 style="margin-top: 1rem;">Resultado</h3>
+  {% include "database_demo/_sql_result.html" %}
+  {% endif %}
+</div>
+{% endblock %}

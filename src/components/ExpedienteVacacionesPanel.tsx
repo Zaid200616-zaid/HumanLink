@@ -82,8 +82,14 @@ export default function ExpedienteVacacionesPanel({ empleadoId, solicitudId, com
     setLoading(true);
     const q = solicitudId ? `?solicitudId=${solicitudId}` : "";
     fetch(`/api/vacaciones/expediente/${empleadoId}${q}`)
-      .then((r) => r.json())
-      .then(setData)
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || json.error || typeof json.diasDisponibles !== "number") {
+          setData(null);
+          return;
+        }
+        setData(json);
+      })
       .finally(() => setLoading(false));
   }, [empleadoId, solicitudId]);
 
@@ -145,14 +151,21 @@ export default function ExpedienteVacacionesPanel({ empleadoId, solicitudId, com
 
       {solicitudId && data.diasSolicitudActual != null && (
         <div
-          className={`p-3 rounded-lg flex items-center gap-2 text-sm ${
+          className={`p-3 rounded-lg flex flex-col gap-1 text-sm ${
             data.puedeAutorizar ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"
           }`}
         >
-          {data.puedeAutorizar ? <CheckCircle size={18} /> : <XCircle size={18} />}
-          {data.puedeAutorizar
-            ? `Puede autorizarse: solicita ${data.diasSolicitudActual} días y quedan ${data.diasDisponibles} disponibles.`
-            : `No autorizable: solicita ${data.diasSolicitudActual} días pero solo quedan ${data.diasDisponibles} disponibles.`}
+          <div className="flex items-center gap-2">
+            {data.puedeAutorizar ? <CheckCircle size={18} /> : <XCircle size={18} />}
+            {data.puedeAutorizar
+              ? `Puede autorizarse: solicita ${data.diasSolicitudActual} días y quedan ${data.diasDisponibles} disponibles.`
+              : `No autorizable: solicita ${data.diasSolicitudActual} días pero solo quedan ${data.diasDisponibles} disponibles.`}
+          </div>
+          {!data.puedeAutorizar && (
+            <p className="text-xs pl-7">
+              Rechace la solicitud o pida al empleado ajustar las fechas antes de aprobar.
+            </p>
+          )}
         </div>
       )}
 

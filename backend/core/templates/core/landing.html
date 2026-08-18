@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}HumanLink — Inicio{% endblock %}
+{% block body %}
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:linear-gradient(135deg,var(--brand-dark) 0%,#121820 100%);">
+  <div style="text-align:center;margin-bottom:2rem;">
+    <div class="hl-brand-name" style="font-size:2rem;">Human<span style="color:var(--brand-cyan);">Link</span></div>
+    <p style="color:var(--color-muted);margin-top:0.5rem;font-size:0.9rem;">Sistema de Gestión de Recursos Humanos</p>
+  </div>
+  <div class="hl-card" style="max-width:480px;width:100%;text-align:center;">
+    <p style="margin-bottom:1.25rem;color:var(--color-muted);">Plataforma corporativa para la gestión de personal, asistencias, permisos y desarrollo organizacional.</p>
+    <a href="{% url 'login' %}" class="hl-btn hl-btn-primary" style="width:100%;text-align:center;">Iniciar sesión</a>
+    <p style="margin-top:1rem;font-size:0.8rem;">
+      <a href="{% url 'postular' %}">Postular a una vacante</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-import { apiError, apiSuccess, requireAuth } from "@/lib/api";
+import { apiError, apiSuccess, requireAuth, handlePrismaError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { notificarUsuarioId } from "@/lib/email";
 
@@ -21,9 +21,6 @@ export async function POST(_req: Request, { params }: Params) {
   });
 
   if (!cap) return apiError("Capacitación no encontrada", 404);
-  if (cap._count.empleados >= cap.cupoMaximo) {
-    return apiError("No hay cupo disponible en esta capacitación", 409);
-  }
 
   const yaInscrito = await prisma.capacitacionEmpleado.findUnique({
     where: {
@@ -36,21 +33,25 @@ export async function POST(_req: Request, { params }: Params) {
 
   if (yaInscrito) return apiError("Ya estás inscrito en esta capacitación", 409);
 
-  const inscripcion = await prisma.capacitacionEmpleado.create({
-    data: {
-      capacitacionId,
-      empleadoId: session.empleadoId,
-      estado: "INSCRITO",
-    },
-    include: { capacitacion: true },
-  });
+  try {
+    const inscripcion = await prisma.capacitacionEmpleado.create({
+      data: {
+        capacitacionId,
+        empleadoId: session.empleadoId,
+        estado: "INSCRITO",
+      },
+      include: { capacitacion: true },
+    });
 
-  await notificarUsuarioId(
-    session.userId,
-    "Inscripción confirmada",
-    `Te inscribiste en: ${cap.nombre}`,
-    "CAPACITACION"
-  );
+    await notificarUsuarioId(
+      session.userId,
+      "Inscripción confirmada",
+      `Te inscribiste en: ${cap.nombre}`,
+      "CAPACITACION"
+    );
 
-  return apiSuccess(inscripcion, 201);
+    return apiSuccess(inscripcion, 201);
+  } catch (e) {
+    return handlePrismaError(e);
+  }
 }

@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}{{ departamento.nombre }} — HumanLink{% endblock %}
+
+{% block content %}
+<p style="margin-bottom:1rem;"><a href="/departamentos/">← Departamentos</a></p>
+<h1 class="hl-page-title">{{ departamento.nombre }}</h1>
+<p class="hl-page-subtitle">{{ departamento.organizacion.nombre|default:"" }} · {{ departamento.ubicacion|default:"Sin ubicación" }}</p>
+
+<div class="hl-grid hl-grid-2">
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Empleados ({{ empleados|length }})</h2>
+    <ul style="list-style:none;font-size:0.875rem;">
+      {% for e in empleados %}
+      <li style="padding:0.35rem 0;border-bottom:1px solid var(--color-border);">
+        <a href="/empleados/{{ e.id }}/">{{ e.nombre }} {{ e.apellidoPaterno }}</a> — {{ e.puesto }}
+      </li>
+      {% empty %}
+      <li style="color:var(--color-muted);">Sin empleados</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Vacantes</h2>
+    <ul style="list-style:none;font-size:0.875rem;">
+      {% for v in vacantes %}
+      <li style="padding:0.35rem 0;border-bottom:1px solid var(--color-border);">{{ v.titulo }} — {{ v.estado }}</li>
+      {% empty %}
+      <li style="color:var(--color-muted);">Sin vacantes</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

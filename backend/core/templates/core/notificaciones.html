@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Notificaciones — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Notificaciones</h1>
+<p class="hl-page-subtitle">Avisos y alertas del sistema</p>
+
+<div class="hl-card">
+  {% for n in notificaciones %}
+  <div style="display:flex;justify-content:space-between;align-items:start;padding:0.75rem 0;border-bottom:1px solid var(--color-border);gap:1rem;">
+    <div style="flex:1;">
+      <p style="font-weight:500;font-size:0.9rem;{% if not n.leida %}color:var(--color-primary-light);{% endif %}">{{ n.titulo }}</p>
+      <p style="font-size:0.85rem;color:var(--color-muted);margin-top:0.25rem;">{{ n.mensaje }}</p>
+      <p style="font-size:0.75rem;color:var(--color-muted);margin-top:0.25rem;">{{ n.createdAt|date:"d/m/Y H:i" }} · {{ n.tipo }}</p>
+    </div>
+    {% if not n.leida %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="marcar_leida">
+      <input type="hidden" name="notificacion_id" value="{{ n.id }}">
+      <button type="submit" class="hl-btn hl-btn-secondary hl-btn-sm">Marcar leída</button>
+    </form>
+    {% endif %}
+  </div>
+  {% empty %}
+  <p style="color:var(--color-muted);">Sin notificaciones</p>
+  {% endfor %}
+</div>
+{% endblock %}

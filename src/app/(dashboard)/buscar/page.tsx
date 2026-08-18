@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/lib/use-session";
 import LoadingState from "@/components/ui/LoadingState";
@@ -24,11 +25,18 @@ const vacío: Resultados = {
 };
 
 export default function BuscarPage() {
-  const { loading: sessionLoading } = useSession();
+  const router = useRouter();
+  const { loading: sessionLoading, isEmpleado } = useSession();
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<Resultados>(vacío);
   const [error, setError] = useState("");
   const [buscando, setBuscando] = useState(false);
+
+  useEffect(() => {
+    if (!sessionLoading && isEmpleado) {
+      router.replace("/vacaciones");
+    }
+  }, [sessionLoading, isEmpleado, router]);
 
   useEffect(() => {
     if (q.trim().length < 2) {
@@ -52,7 +60,7 @@ export default function BuscarPage() {
     return () => clearTimeout(t);
   }, [q]);
 
-  if (sessionLoading) return <LoadingState />;
+  if (sessionLoading || isEmpleado) return <LoadingState />;
 
   const total =
     resultados.empleados.length +

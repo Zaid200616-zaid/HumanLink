@@ -45,6 +45,8 @@ export default function VacantesPage() {
   const [form, setForm] = useState(formVacío);
   const [editId, setEditId] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
+  const [filtroTexto, setFiltroTexto] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
   const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   const cargar = useCallback(() => {
@@ -113,6 +115,16 @@ export default function VacantesPage() {
     const res = await fetch(`/api/vacantes/${v.id}`, { method: "DELETE" });
     if (res.ok) cargar();
   }
+
+  const vacantesFiltradas = vacantes.filter((v) => {
+    if (filtroEstado && v.estado !== filtroEstado) return false;
+    if (filtroTexto.trim()) {
+      const q = filtroTexto.trim().toLowerCase();
+      const texto = [v.titulo, v.departamento.nombre, v.estado].join(" ").toLowerCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -198,6 +210,27 @@ export default function VacantesPage() {
         </div>
       </form>
 
+      <div className="card mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="label-field">Buscar</label>
+          <input
+            className="input-field w-full"
+            placeholder="Título o departamento…"
+            value={filtroTexto}
+            onChange={(e) => setFiltroTexto(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label-field">Estado</label>
+          <select className="input-field w-full" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="ABIERTA">Abierta</option>
+            <option value="PAUSADA">Pausada</option>
+            <option value="CERRADA">Cerrada</option>
+          </select>
+        </div>
+      </div>
+
       <div className="hl-table-shell">
         <div className="hl-table-wrap">
         <table className="hl-table min-w-[720px]">
@@ -211,7 +244,14 @@ export default function VacantesPage() {
             </tr>
           </thead>
           <tbody>
-            {vacantes.map((v) => (
+            {vacantesFiltradas.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-muted">
+                  {vacantes.length === 0 ? "No hay vacantes registradas" : "Ninguna vacante coincide con los filtros"}
+                </td>
+              </tr>
+            ) : (
+            vacantesFiltradas.map((v) => (
               <tr key={v.id} className="border-b hover:bg-[var(--color-surface-2)]">
                 <td className="py-3 font-medium">{v.titulo}</td>
                 <td className="py-3">{v.departamento.nombre}</td>
@@ -222,7 +262,8 @@ export default function VacantesPage() {
                   <button type="button" className="link-danger" onClick={() => eliminar(v)}>Eliminar</button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
         </div>

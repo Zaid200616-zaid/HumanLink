@@ -1,0 +1,13 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+{% for section in sections %}
+<div class="hl-card demo-section">
+  <h2>{{ section.label }}</h2>
+  <pre class="hl-sql">{{ section.sql }}</pre>
+  {% with outcome=section.outcome %}
+  {% include "database_demo/_sql_result.html" %}
+  {% endwith %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -36,6 +36,7 @@ export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [form, setForm] = useState(emptyEvento);
   const [msg, setMsg] = useState("");
+  const [filtroTexto, setFiltroTexto] = useState("");
   const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   function cargar() {
@@ -87,6 +88,12 @@ export default function EventosPage() {
 
   if (sessionLoading) return <LoadingState />;
 
+  const eventosFiltrados = eventos.filter((e) => {
+    if (!filtroTexto.trim()) return true;
+    const q = filtroTexto.trim().toLowerCase();
+    return [e.titulo, e.ubicacion, e.descripcion].filter(Boolean).join(" ").toLowerCase().includes(q);
+  });
+
   return (
     <div>
       <PageHeader
@@ -129,10 +136,22 @@ export default function EventosPage() {
         </form>
       )}
 
+      <div className="card mb-4">
+        <label className="label-field">Buscar evento</label>
+        <input
+          className="input-field w-full"
+          placeholder="Título, ubicación o descripción…"
+          value={filtroTexto}
+          onChange={(e) => setFiltroTexto(e.target.value)}
+        />
+      </div>
+
       {eventos.length === 0 ? (
         <div className="card text-center text-muted">No hay eventos programados</div>
+      ) : eventosFiltrados.length === 0 ? (
+        <div className="card text-center text-muted">Ningún evento coincide con la búsqueda</div>
       ) : (
-        eventos.map((e) => (
+        eventosFiltrados.map((e) => (
           <div key={e.id} className="card mb-6">
             <div className="flex flex-wrap justify-between gap-4">
               <div>

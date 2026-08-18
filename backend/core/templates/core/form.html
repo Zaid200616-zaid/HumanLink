@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+{% block title %}{{ page_title|default:"Formulario" }} — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">{{ page_title }}</h1>
+{% if page_subtitle %}<p class="hl-page-subtitle">{{ page_subtitle }}</p>{% endif %}
+
+<div class="hl-card" style="max-width:560px;">
+  <form method="post" enctype="{% block form_enctype %}application/x-www-form-urlencoded{% endblock %}">
+    {% csrf_token %}
+    {% block form_fields %}
+    {% for field in fields %}
+    <div class="hl-form-group">
+      <label class="hl-label" for="{{ field.id }}">{{ field.label }}{% if field.required %} *{% endif %}</label>
+      {% if field.type == "textarea" %}
+      <textarea class="hl-textarea" id="{{ field.id }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>{{ field.value|default:"" }}</textarea>
+      {% elif field.type == "select" %}
+      <select class="hl-select" id="{{ field.id }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>
+        {% for opt in field.options %}
+        <option value="{{ opt.value }}" {% if field.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <input class="hl-input" type="{{ field.type|default:'text' }}" id="{{ field.id }}" name="{{ field.name }}" value="{{ field.value|default:'' }}" {% if field.required %}required{% endif %}>
+      {% endif %}
+      {% if field.help %}<p style="font-size:0.75rem;color:var(--color-muted);margin-top:0.25rem;">{{ field.help }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    {% endblock %}
+    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+      <button type="submit" class="hl-btn hl-btn-primary">{{ submit_label|default:"Guardar" }}</button>
+      {% if cancel_url %}<a href="{{ cancel_url }}" class="hl-btn hl-btn-secondary">Cancelar</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

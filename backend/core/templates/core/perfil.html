@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+{% block title %}Mi Perfil — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Mi Perfil</h1>
+<p class="hl-page-subtitle">Información de tu cuenta</p>
+
+<div class="hl-grid hl-grid-2">
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Cuenta</h2>
+    <dl style="font-size:0.875rem;display:grid;grid-template-columns:auto 1fr;gap:0.35rem 1rem;">
+      <dt style="color:var(--color-muted);">Correo</dt><dd>{{ usuario.email }}</dd>
+      <dt style="color:var(--color-muted);">Rol</dt><dd>{{ usuario.rol.nombre }}</dd>
+      <dt style="color:var(--color-muted);">Notificaciones</dt><dd>{{ notifs_count }} sin leer</dd>
+    </dl>
+  </div>
+  {% if empleado %}
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Datos laborales</h2>
+    <dl style="font-size:0.875rem;display:grid;grid-template-columns:auto 1fr;gap:0.35rem 1rem;">
+      <dt style="color:var(--color-muted);">Nombre</dt><dd>{{ empleado.nombre }} {{ empleado.apellidoPaterno }}</dd>
+      <dt style="color:var(--color-muted);">Puesto</dt><dd>{{ empleado.puesto }}</dd>
+      <dt style="color:var(--color-muted);">No. empleado</dt><dd>{{ empleado.numeroEmpleado }}</dd>
+      <dt style="color:var(--color-muted);">Departamento</dt><dd>{{ empleado.departamento.nombre|default:"—" }}</dd>
+      <dt style="color:var(--color-muted);">Turno</dt><dd>{{ empleado.turno.nombre|default:"—" }}</dd>
+    </dl>
+  </div>
+  {% endif %}
+</div>
+
+<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+  <a href="/notificaciones/" class="hl-btn hl-btn-secondary">Notificaciones</a>
+  <a href="/vacaciones/" class="hl-btn hl-btn-secondary">Expediente vacaciones</a>
+  <a href="/solicitudes/" class="hl-btn hl-btn-secondary">Mis solicitudes</a>
+</div>
+{% endblock %}

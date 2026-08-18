@@ -13,7 +13,11 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed-carga": "tsx prisma/seed-carga.ts",
+    "db:seed-data": "tsx prisma/seed-data.ts",
+    "db:cleanup": "tsx prisma/cleanup-restore-data.ts",
+    "db:reset-vacaciones": "tsx prisma/reset-vacaciones.ts",
+    "db:audit": "tsx prisma/audit-db.ts",
+    "db:verify": "tsx prisma/verify-database.ts",
     "db:setup": "prisma generate && prisma migrate deploy && tsx prisma/seed.ts",
     "test": "tsx --test tests/lib.test.ts"
   },

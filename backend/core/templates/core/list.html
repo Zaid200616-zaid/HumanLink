@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% load hl_extras %}
+{% block title %}{{ page_title }} — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">{{ page_title }}</h1>
+{% if page_subtitle %}<p class="hl-page-subtitle">{{ page_subtitle }}</p>{% endif %}
+
+{% block list_actions %}{% endblock %}
+
+<div class="hl-card">
+  <div class="hl-table-wrap">
+    <table class="hl-table">
+      <thead>
+        <tr>
+          {% for col in columns %}
+          <th>{{ col.label }}</th>
+          {% endfor %}
+          {% if detail_key %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for col in columns %}
+          <td>{{ row|get_item:col.key }}</td>
+          {% endfor %}
+          {% if detail_key %}
+          <td><a href="{{ row|get_item:detail_key }}">Ver</a></td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="{% if detail_key %}{{ columns|length|add:1 }}{% else %}{{ columns|length }}{% endif %}" style="text-align:center;color:var(--color-muted);">Sin registros</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% block list_extra %}{% endblock %}
+{% endblock %}

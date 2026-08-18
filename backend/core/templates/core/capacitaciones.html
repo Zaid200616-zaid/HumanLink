@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block title %}Capacitaciones — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Capacitaciones</h1>
+<p class="hl-page-subtitle">Programa de desarrollo y formación</p>
+
+<div class="hl-card">
+  <div class="hl-table-wrap">
+    <table class="hl-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Instructor</th>
+          <th>Inicio</th>
+          <th>Cupo</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in capacitaciones %}
+        <tr>
+          <td>{{ c.nombre }}</td>
+          <td>{{ c.instructor|default:"—" }}</td>
+          <td>{{ c.fechaInicio|date:"d/m/Y" }}</td>
+          <td>{{ c.inscritos }}/{{ c.cupoMaximo }}</td>
+          <td>{{ c.estado }}</td>
+          <td>
+            {% if empleado_id %}
+              {% if c.id in inscripciones %}
+              <span class="hl-badge hl-badge-aprobada">Inscrito</span>
+              {% elif c.inscritos < c.cupoMaximo %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="inscribir">
+                <input type="hidden" name="capacitacion_id" value="{{ c.id }}">
+                <button type="submit" class="hl-btn hl-btn-primary hl-btn-sm">Inscribirme</button>
+              </form>
+              {% else %}
+              <span style="color:var(--color-muted);font-size:0.8rem;">Sin cupo</span>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--color-muted);">Sin capacitaciones</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

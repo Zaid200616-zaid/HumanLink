@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+{% block title %}Recuperar contraseña — HumanLink{% endblock %}
+{% block body %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:var(--color-bg);">
+  <div class="hl-card" style="max-width:420px;width:100%;">
+    <h1 class="hl-page-title" style="text-align:center;">Recuperar contraseña</h1>
+    <p class="hl-page-subtitle" style="text-align:center;">Solicite un enlace de recuperación o restablezca su acceso</p>
+    <form class="hl-form-group">
+      <label class="hl-label" for="rec-email">Correo electrónico</label>
+      <input class="hl-input" type="email" id="rec-email" placeholder="nombre.apellido@humanlink.mx" disabled>
+      <button type="button" class="hl-btn hl-btn-primary" style="width:100%;margin-top:0.75rem;opacity:0.6;cursor:not-allowed;" disabled>
+        Enviar enlace de recuperación
+      </button>
+    </form>
+    <p style="font-size:0.8rem;color:var(--color-muted);margin-top:1rem;text-align:center;">
+      Funcionalidad disponible próximamente. Contacte al administrador del sistema.
+    </p>
+    <p style="text-align:center;margin-top:1rem;">
+      <a href="{% url 'login' %}">← Volver al inicio de sesión</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

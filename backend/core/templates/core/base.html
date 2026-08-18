@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HumanLink{% endblock %}</title>
+  <style>
+    :root {
+      --brand-cyan: #00ccff;
+      --brand-dark: #0a0c10;
+      --color-primary: #00a8d4;
+      --color-primary-light: #00ccff;
+      --color-secondary: #22c55e;
+      --color-accent: #8b5cf6;
+      --color-danger: #ef4444;
+      --color-warning: #f59e0b;
+      --color-bg: #0b0d12;
+      --color-bg-2: #0e1117;
+      --color-surface: #14171f;
+      --color-surface-2: #1b1f29;
+      --color-surface-3: #232834;
+      --color-border: #272c38;
+      --color-text: #e6e8ee;
+      --color-muted: #8b92a3;
+      --color-sidebar: #0e1117;
+      --sidebar-width: 240px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 100% -10%, rgba(0, 168, 212, 0.08), transparent 60%),
+        radial-gradient(900px 500px at -10% 0%, rgba(0, 204, 255, 0.04), transparent 55%),
+        var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    a { color: var(--color-primary-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .hl-layout { display: flex; min-height: 100vh; }
+    .hl-sidebar {
+      width: var(--sidebar-width);
+      background: var(--color-sidebar);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+    }
+    .hl-brand {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .hl-brand-name { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hl-brand-name span { color: var(--brand-cyan); }
+    .hl-brand-sub { font-size: 0.7rem; color: var(--color-muted); margin-top: 0.25rem; }
+    .hl-nav { flex: 1; padding: 0.75rem 0; }
+    .hl-nav-group { margin-bottom: 1rem; }
+    .hl-nav-group-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+      padding: 0 1rem 0.35rem;
+    }
+    .hl-nav-link {
+      display: block;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+    }
+    .hl-nav-link:hover { background: var(--color-surface); color: var(--color-text); text-decoration: none; }
+    .hl-nav-link.active {
+      color: var(--color-primary-light);
+      background: rgba(0, 168, 212, 0.08);
+      border-left-color: var(--color-primary);
+    }
+    .hl-sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--color-border);
+      font-size: 0.75rem;
+      color: var(--color-muted);
+    }
+    .hl-main { flex: 1; margin-left: var(--sidebar-width); min-width: 0; }
+    .hl-topbar {
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-2);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+    }
+    .hl-content { padding: 1.5rem; max-width: 1200px; }
+    .hl-page-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .hl-page-subtitle { color: var(--color-muted); font-size: 0.875rem; margin-bottom: 1.25rem; }
+    .hl-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .hl-card + .hl-card { margin-top: 1rem; }
+    .hl-btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .hl-btn-primary { background: var(--color-primary); color: #fff; }
+    .hl-btn-primary:hover { background: var(--color-primary-light); color: #0b0d12; text-decoration: none; }
+    .hl-btn-secondary { background: var(--color-surface-2); color: var(--color-text); border: 1px solid var(--color-border); }
+    .hl-btn-danger { background: var(--color-danger); color: #fff; }
+    .hl-btn-sm { padding: 0.35rem 0.65rem; font-size: 0.75rem; }
+    .hl-input, .hl-select, .hl-textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-size: 0.875rem;
+    }
+    .hl-textarea { min-height: 80px; resize: vertical; }
+    .hl-label { display: block; font-size: 0.8rem; color: var(--color-muted); margin-bottom: 0.35rem; }
+    .hl-form-group { margin-bottom: 0.85rem; }
+    .hl-table-wrap { overflow-x: auto; }
+    .hl-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .hl-table th {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      color: var(--color-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .hl-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--color-border); }
+    .hl-table tr:hover td { background: var(--color-surface-2); }
+    .hl-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .hl-badge-pendiente { background: rgba(245,158,11,0.15); color: var(--color-warning); }
+    .hl-badge-aprobada, .hl-badge-aprobado { background: rgba(34,197,94,0.15); color: var(--color-secondary); }
+    .hl-badge-rechazada, .hl-badge-rechazado { background: rgba(239,68,68,0.15); color: var(--color-danger); }
+    .hl-messages { margin-bottom: 1rem; }
+    .hl-msg {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+    .hl-msg-success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .hl-msg-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .hl-msg-warning { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; }
+    .hl-msg-info { background: rgba(0,168,212,0.12); border: 1px solid rgba(0,168,212,0.3); color: #67e8f9; }
+    .hl-grid { display: grid; gap: 0.75rem; }
+    .hl-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .hl-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .hl-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 768px) {
+      .hl-sidebar { display: none; }
+      .hl-main { margin-left: 0; }
+      .hl-grid-2, .hl-grid-3, .hl-grid-4 { grid-template-columns: 1fr; }
+    }
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+{% block body %}
+<div class="hl-layout">
+  {% if hl_user %}
+  <aside class="hl-sidebar">
+    <div class="hl-brand">
+      <div class="hl-brand-name">Human<span>Link</span></div>
+      <div class="hl-brand-sub">Gestión de RRHH</div>
+    </div>
+    <nav class="hl-nav">
+      {% for group, items in hl_nav_groups.items %}
+      <div class="hl-nav-group">
+        <div class="hl-nav-group-title">{{ group }}</div>
+        {% for item in items %}
+        <a href="{{ item.href }}" class="hl-nav-link{% if request.path == item.href %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </nav>
+    <div class="hl-sidebar-footer">
+      {{ hl_user.email }}<br>
+      <span style="color: var(--color-primary-light);">{{ hl_rol }}</span>
+    </div>
+  </aside>
+  {% endif %}
+  <div class="hl-main">
+    {% if hl_user %}
+    <div class="hl-topbar">
+      <span>{{ hl_user.email }}</span>
+      <a href="{% url 'logout' %}" class="hl-btn hl-btn-secondary hl-btn-sm">Cerrar sesión</a>
+    </div>
+    {% endif %}
+    <main class="hl-content">
+      {% if messages %}
+      <div class="hl-messages">
+        {% for message in messages %}
+        <div class="hl-msg hl-msg-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+</body>
+</html>

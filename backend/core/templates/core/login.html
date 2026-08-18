@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+{% block title %}Iniciar sesión — HumanLink{% endblock %}
+{% block body %}
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,var(--brand-dark) 0%,#121820 100%);">
+  <div style="text-align:center;margin-bottom:1.5rem;">
+    <div class="hl-brand-name" style="font-size:1.75rem;">Human<span style="color:var(--brand-cyan);">Link</span></div>
+    <p style="color:rgba(255,255,255,0.65);margin-top:0.35rem;font-size:0.85rem;">Sistema de Gestión de Recursos Humanos</p>
+  </div>
+
+  <div class="hl-card" style="width:100%;max-width:420px;">
+    <h1 style="font-size:1.15rem;margin-bottom:1rem;">Iniciar sesión</h1>
+
+    {% if messages %}
+    <div class="hl-messages">
+      {% for message in messages %}
+      <div class="hl-msg hl-msg-{{ message.tags|default:'error' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if bloqueo %}
+    <div class="hl-card" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3);margin-bottom:1rem;">
+      <p style="font-weight:600;color:#fca5a5;margin-bottom:0.5rem;">Cuenta bloqueada temporalmente</p>
+      <p style="font-size:0.85rem;color:var(--color-muted);">{{ bloqueo.mensaje }}</p>
+      <ul style="margin-top:0.75rem;padding-left:1.25rem;font-size:0.8rem;color:var(--color-muted);">
+        {% for r in bloqueo.recomendaciones %}
+        <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="hl-form-group">
+        <label class="hl-label" for="email">Correo electrónico</label>
+        <input class="hl-input" type="email" id="email" name="email" placeholder="nombre@humanlink.mx" required>
+      </div>
+      <div class="hl-form-group">
+        <label class="hl-label" for="password">Contraseña</label>
+        <input class="hl-input" type="password" id="password" name="password" value="{{ demo_password }}" required>
+      </div>
+      <button type="submit" class="hl-btn hl-btn-primary" style="width:100%;margin-top:0.5rem;">Entrar</button>
+    </form>
+    <p style="text-align:center;margin-top:1rem;font-size:0.8rem;">
+      <a href="{% url 'landing' %}" style="color:var(--brand-cyan);">← Volver al sitio corporativo</a>
+    </p>
+    <p style="text-align:center;margin-top:0.75rem;font-size:0.8rem;">
+      <a href="{% url 'recuperar' %}">¿Olvidaste tu contraseña?</a>
+    </p>
+  </div>
+
+  <div class="hl-card" style="width:100%;max-width:420px;margin-top:1rem;">
+    <p style="font-size:0.75rem;color:var(--color-muted);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Acceso demo</p>
+    <p style="font-size:0.8rem;color:var(--color-muted);margin-bottom:0.75rem;">Contraseña: <code style="color:var(--color-primary-light);">{{ demo_password }}</code></p>
+    <div style="display:flex;flex-direction:column;gap:0.35rem;">
+      {% for u in demo_users %}
+      <form method="post" style="display:flex;gap:0.5rem;align-items:center;">
+        {% csrf_token %}
+        <input type="hidden" name="email" value="{{ u.email }}">
+        <input type="hidden" name="password" value="{{ demo_password }}">
+        <button type="submit" class="hl-btn hl-btn-secondary hl-btn-sm" style="flex:1;text-align:left;">
+          {{ u.label }} — {{ u.email }}
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

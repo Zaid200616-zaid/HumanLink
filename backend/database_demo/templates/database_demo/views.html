@@ -1,0 +1,33 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="hl-card">
+  <h2>Vistas MySQL (Vista*)</h2>
+  <p class="hl-muted">SELECT FROM vista administrativa. Solo lectura; ejecutar al pulsar el botón.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="query_view">
+    <div class="demo-inline-form">
+      <div class="hl-form-row">
+        <label for="vista">Vista</label>
+        <select name="vista" id="vista">
+          {% for v in vistas %}
+          <option value="{{ v }}" {% if v == selected_vista %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="hl-form-row">
+        <label for="limit">Límite filas</label>
+        <input type="number" name="limit" id="limit" value="{{ limit }}" min="1" max="100">
+      </div>
+      <button type="submit" class="hl-btn hl-btn-primary">Consultar vista</button>
+    </div>
+  </form>
+
+  {% if outcome %}
+  <h3 style="margin-top: 1rem;">SELECT * FROM {{ selected_vista }} LIMIT {{ limit }}</h3>
+  {% include "database_demo/_sql_result.html" %}
+  {% endif %}
+</div>
+{% endblock %}

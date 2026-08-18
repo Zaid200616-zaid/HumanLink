@@ -8,7 +8,7 @@ import Link from "next/link";
 
 import { useSession } from "@/lib/use-session";
 
-import { fetchList } from "@/lib/fetch-client";
+import { fetchJson, fetchList } from "@/lib/fetch-client";
 import Avatar from "@/components/Avatar";
 
 import ExpedienteVacacionesPanel from "@/components/ExpedienteVacacionesPanel";
@@ -24,19 +24,23 @@ export default function VacacionesPage() {
   const { user, canManage, isEmpleado, isSupervisor, loading } = useSession();
 
   const [equipo, setEquipo] = useState<Array<{ id: number; nombre: string; apellidoPaterno: string; puesto: string; fotoUrl?: string | null }>>([]);
-
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [filtroPersonal, setFiltroPersonal] = useState("");
 
 
 
   useEffect(() => {
+    if (loading) return;
 
-    if (isEmpleado && user?.empleadoId) {
-
-      setSelectedId(user.empleadoId);
-
+    if (isEmpleado) {
+      if (user?.empleadoId) {
+        setSelectedId(user.empleadoId);
+        return;
+      }
+      fetchJson<{ empleado?: { id: number } }>("/api/auth/me").then(({ data }) => {
+        if (data?.empleado?.id) setSelectedId(data.empleado.id);
+      });
       return;
-
     }
 
     if (canManage) {
@@ -70,7 +74,13 @@ export default function VacacionesPage() {
           setEquipo(todos.flat().filter((e) => e.activo));
         });
     }
-  }, [canManage, isEmpleado, isSupervisor, user]);
+  }, [canManage, isEmpleado, isSupervisor, user, loading]);
+
+  const equipoFiltrado = equipo.filter((e) => {
+    if (!filtroPersonal.trim()) return true;
+    const q = filtroPersonal.trim().toLowerCase();
+    return `${e.nombre} ${e.apellidoPaterno} ${e.puesto}`.toLowerCase().includes(q);
+  });
 
 
 
@@ -101,9 +111,16 @@ export default function VacacionesPage() {
 
             </h2>
 
+            <input
+              className="input-field w-full mb-3"
+              placeholder="Buscar por nombre o puesto…"
+              value={filtroPersonal}
+              onChange={(e) => setFiltroPersonal(e.target.value)}
+            />
+
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
 
-              {equipo.map((e) => (
+              {equipoFiltrado.map((e) => (
 
                 <button
 

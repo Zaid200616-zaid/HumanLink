@@ -1,0 +1,35 @@
+from django.urls import path
+
+from core.views import auth, dashboard, modules
+
+urlpatterns = [
+    path("", auth.landing, name="landing"),
+    path("login/", auth.login_view, name="login"),
+    path("logout/", auth.logout_view, name="logout"),
+    path("recuperar/", auth.recuperar_view, name="recuperar"),
+    path("dashboard/", dashboard.dashboard_view, name="dashboard"),
+    path("empleados/", modules.empleados_list, name="empleados"),
+    path("empleados/<int:pk>/", modules.empleado_detail, name="empleado_detail"),
+    path("departamentos/", modules.departamentos_list, name="departamentos"),
+    path("departamentos/<int:pk>/", modules.departamento_detail, name="departamento_detail"),
+    path("documentos/", modules.documentos_list, name="documentos"),
+    path("turnos/", modules.turnos_list, name="turnos"),
+    path("solicitudes/", modules.solicitudes_list, name="solicitudes"),
+    path("vacaciones/", modules.vacaciones_expediente, name="vacaciones"),
+    path("vacaciones/expediente/<int:empleado_id>/", modules.vacaciones_expediente, name="vacaciones_expediente"),
+    path("vacantes/", modules.vacantes_list, name="vacantes"),
+    path("candidatos/", modules.candidatos_list, name="candidatos"),
+    path("capacitaciones/", modules.capacitaciones_list, name="capacitaciones"),
+    path("evaluaciones/", modules.evaluaciones_list, name="evaluaciones"),
+    path("eventos/", modules.eventos_list, name="eventos"),
+    path("quejas/", modules.quejas_list, name="quejas"),
+    path("reportes/", modules.reportes_view, name="reportes"),
+    path("reportes/historial/", modules.reportes_historial, name="reportes_historial"),
+    path("permisos-rol/", modules.permisos_rol, name="permisos_rol"),
+    path("perfil/", modules.perfil_view, name="perfil"),
+    path("buscar/", modules.buscar_view, name="buscar"),
+    path("notificaciones/", modules.notificaciones_list, name="notificaciones"),
+    path("asistencias/", modules.asistencias_list, name="asistencias"),
+    path("registro-entrada/", modules.registro_entrada, name="registro_entrada"),
+    path("postular/", modules.postular_view, name="postular"),
+]

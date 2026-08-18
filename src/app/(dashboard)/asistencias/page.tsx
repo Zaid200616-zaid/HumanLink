@@ -57,16 +57,23 @@ export default function AsistenciasPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsDia | null>(null);
+  const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroTexto, setFiltroTexto] = useState("");
   const { confirm, ConfirmDialogHost } = useConfirmDialog();
 
   const cargar = useCallback(() => {
-    fetch("/api/asistencias")
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filtroFecha) params.set("fecha", filtroFecha);
+    const qs = params.toString();
+    fetch(`/api/asistencias${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((data) => {
         setRegistros(Array.isArray(data) ? data : []);
         setLoading(false);
       });
-  }, []);
+  }, [filtroFecha]);
 
   const cargarStats = useCallback(() => {
     if (!esConsultor) return;
@@ -87,7 +94,25 @@ export default function AsistenciasPage() {
         .then((r) => r.json())
         .then((d) => setEmpleados(d.items || []));
     }
-  }, [cargar, cargarStats, puedeRegistrar, sessionLoading]);
+  }, [cargar, cargarStats, puedeRegistrar, sessionLoading, filtroFecha]);
+
+  const registrosFiltrados = registros.filter((r) => {
+    if (filtroEstado && r.estado !== filtroEstado) return false;
+    if (filtroTexto.trim()) {
+      const q = filtroTexto.trim().toLowerCase();
+      const texto = [
+        r.empleado.nombre,
+        r.empleado.apellidoPaterno,
+        r.empleado.departamento?.nombre,
+        r.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  });
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
@@ -235,6 +260,36 @@ export default function AsistenciasPage() {
         </form>
       )}
 
+      <div className="card mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="label-field">Fecha</label>
+          <input
+            type="date"
+            className="input-field w-full"
+            value={filtroFecha}
+            onChange={(e) => setFiltroFecha(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label-field">Estado</label>
+          <select className="input-field w-full" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todos</option>
+            {ESTADOS.map((s) => (
+              <option key={s} value={s}>{ASISTENCIA_BADGES[s]?.label || s}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label-field">Buscar</label>
+          <input
+            className="input-field w-full"
+            placeholder="Empleado o departamento…"
+            value={filtroTexto}
+            onChange={(e) => setFiltroTexto(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="hl-table-shell">
         {loading ? (
           <LoadingState label="Cargando asistencias…" compact />
@@ -254,7 +309,14 @@ export default function AsistenciasPage() {
               </tr>
             </thead>
             <tbody>
-              {registros.map((fila) => {
+              {registrosFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={esConsultor ? 8 : 7} className="text-center text-muted py-8">
+                    {registros.length === 0 ? "Sin registros de asistencia" : "Ningún registro coincide con los filtros"}
+                  </td>
+                </tr>
+              ) : (
+              registrosFiltrados.map((fila) => {
                 const turno = fila.turnoNombre || fila.empleado.turno?.nombre || "—";
                 return (
                   <tr key={fila.id}>
@@ -276,11 +338,7 @@ export default function AsistenciasPage() {
                     {esConsultor && !puedeEditarEliminar && <td className="text-muted text-xs">Solo lectura</td>}
                   </tr>
                 );
-              })}
-              {registros.length === 0 && (
-                <tr>
-                  <td colSpan={esConsultor ? 8 : 7} className="hl-table-empty">No hay registros de asistencia.</td>
-                </tr>
+              })
               )}
             </tbody>
           </table>

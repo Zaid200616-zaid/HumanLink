@@ -1,0 +1,92 @@
+{% extends "core/base.html" %}
+
+{% block title %}Demostración BD — HumanLink{% endblock %}
+
+{% block extra_head %}
+<style>
+  .demo-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--hl-border);
+  }
+  .demo-nav a {
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    border: 1px solid var(--hl-border);
+    background: var(--hl-surface);
+    color: var(--hl-text);
+    text-decoration: none;
+  }
+  .demo-nav a.active {
+    background: var(--hl-primary);
+    border-color: var(--hl-primary);
+    color: #fff;
+  }
+  .demo-nav a:hover:not(.active) { background: var(--hl-bg); }
+  .demo-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    background: var(--hl-bg);
+    border: 1px solid var(--hl-border);
+    color: var(--hl-muted);
+    margin-left: 0.35rem;
+  }
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .demo-tile {
+    border: 1px solid var(--hl-border);
+    border-radius: 6px;
+    padding: 1rem;
+    background: var(--hl-surface);
+    text-decoration: none;
+    color: inherit;
+  }
+  .demo-tile:hover { border-color: var(--hl-primary); text-decoration: none; }
+  .demo-tile strong { display: block; margin-bottom: 0.25rem; color: var(--hl-primary); }
+  .demo-tile span { font-size: 0.8125rem; color: var(--hl-muted); }
+  .demo-warning {
+    background: var(--hl-warning-bg);
+    border: 1px solid var(--hl-warning-border);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  .demo-section { margin-bottom: 1.5rem; }
+  .demo-inline-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; }
+  .demo-inline-form .hl-form-row { margin-bottom: 0; }
+  .demo-inline-form input, .demo-inline-form select { max-width: 180px; }
+  .demo-confirm label { font-weight: normal; font-size: 0.875rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<header style="margin-bottom: 1rem;">
+  <h1 style="margin: 0 0 0.25rem; font-size: 1.35rem;">Demostración de Base de Datos</h1>
+  <p class="hl-muted" style="margin: 0;">
+    MySQL 8 · Triggers, procedimientos, vistas e consultas avanzadas (Q1–Q12).
+    Solo lectura en carga; operaciones destructivas requieren confirmación explícita.
+  </p>
+</header>
+
+<nav class="demo-nav" aria-label="Secciones demo BD">
+  <a href="{% url 'database_demo:index' %}" class="{% if demo_active == 'index' %}active{% endif %}">Inicio</a>
+  <a href="{% url 'database_demo:info' %}" class="{% if demo_active == 'info' %}active{% endif %}">Info BD</a>
+  <a href="{% url 'database_demo:indexes' %}" class="{% if demo_active == 'indexes' %}active{% endif %}">Índices</a>
+  <a href="{% url 'database_demo:triggers' %}" class="{% if demo_active == 'triggers' %}active{% endif %}">Triggers</a>
+  <a href="{% url 'database_demo:procedures' %}" class="{% if demo_active == 'procedures' %}active{% endif %}">Procedimientos</a>
+  <a href="{% url 'database_demo:views' %}" class="{% if demo_active == 'views' %}active{% endif %}">Vistas</a>
+  <a href="{% url 'database_demo:queries' %}" class="{% if demo_active == 'queries' %}active{% endif %}">Consultas Q1–Q12</a>
+</nav>
+
+{% block demo_content %}{% endblock %}
+{% endblock %}

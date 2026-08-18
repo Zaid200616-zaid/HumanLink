@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% block title %}Reportes — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Reportes</h1>
+<p class="hl-page-subtitle">Indicadores administrativos — {{ mes }}</p>
+
+<form method="get" style="margin-bottom:1rem;display:flex;gap:0.5rem;align-items:end;">
+  <div class="hl-form-group" style="margin:0;">
+    <label class="hl-label">Mes</label>
+    <input class="hl-input" type="month" name="mes" value="{{ mes }}" style="width:auto;">
+  </div>
+  <button type="submit" class="hl-btn hl-btn-secondary">Filtrar</button>
+</form>
+
+<div class="hl-grid hl-grid-3">
+  <div class="hl-card">
+    <p style="font-size:0.75rem;color:var(--color-muted);">Empleados activos</p>
+    <p style="font-size:1.75rem;font-weight:700;">{{ stats.empleados_activos }}</p>
+  </div>
+  <div class="hl-card">
+    <p style="font-size:0.75rem;color:var(--color-muted);">Solicitudes pendientes</p>
+    <p style="font-size:1.75rem;font-weight:700;">{{ stats.solicitudes_pendientes }}</p>
+  </div>
+  <div class="hl-card">
+    <p style="font-size:0.75rem;color:var(--color-muted);">Asistencias del mes</p>
+    <p style="font-size:1.75rem;font-weight:700;">{{ stats.asistencias_mes }}</p>
+  </div>
+  <div class="hl-card">
+    <p style="font-size:0.75rem;color:var(--color-muted);">Quejas abiertas</p>
+    <p style="font-size:1.75rem;font-weight:700;">{{ stats.quejas_abiertas }}</p>
+  </div>
+  <div class="hl-card">
+    <p style="font-size:0.75rem;color:var(--color-muted);">Vacantes abiertas</p>
+    <p style="font-size:1.75rem;font-weight:700;">{{ stats.vacantes_abiertas }}</p>
+  </div>
+</div>
+
+<p style="margin-top:1rem;"><a href="/reportes/historial/">Ver historial de reportes →</a></p>
+{% endblock %}

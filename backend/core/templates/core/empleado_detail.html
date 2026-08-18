@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}{{ empleado.nombre }} — HumanLink{% endblock %}
+
+{% block content %}
+<p style="margin-bottom:1rem;"><a href="/empleados/">← Empleados</a></p>
+<h1 class="hl-page-title">{{ empleado.nombre }} {{ empleado.apellidoPaterno }} {{ empleado.apellidoMaterno|default:"" }}</h1>
+<p class="hl-page-subtitle">{{ empleado.puesto }} · No. {{ empleado.numeroEmpleado }}</p>
+
+<div class="hl-grid hl-grid-2">
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Información general</h2>
+    <dl style="font-size:0.875rem;display:grid;grid-template-columns:auto 1fr;gap:0.35rem 1rem;">
+      <dt style="color:var(--color-muted);">Correo</dt><dd>{{ empleado.email }}</dd>
+      <dt style="color:var(--color-muted);">Teléfono</dt><dd>{{ empleado.telefono|default:"—" }}</dd>
+      <dt style="color:var(--color-muted);">Departamento</dt><dd>{{ empleado.departamento.nombre|default:"—" }}</dd>
+      <dt style="color:var(--color-muted);">Turno</dt><dd>{{ empleado.turno.nombre|default:"—" }}</dd>
+      <dt style="color:var(--color-muted);">Ingreso</dt><dd>{{ empleado.fechaIngreso|date:"d/m/Y" }}</dd>
+      <dt style="color:var(--color-muted);">Estado</dt><dd>{% if empleado.activo %}Activo{% else %}Inactivo{% endif %}</dd>
+    </dl>
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Acciones</h2>
+    <a href="/vacaciones/expediente/{{ empleado.id }}/" class="hl-btn hl-btn-secondary" style="display:inline-block;margin-right:0.5rem;">Expediente vacaciones</a>
+    <a href="/asistencias/" class="hl-btn hl-btn-secondary" style="display:inline-block;">Asistencias</a>
+  </div>
+</div>
+{% endblock %}

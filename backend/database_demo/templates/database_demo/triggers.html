@@ -1,0 +1,163 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="demo-warning">
+  <strong>Importante:</strong> Ninguna prueba destructiva se ejecuta al cargar la página.
+  Cada demo requiere enviar el formulario y marcar la casilla de confirmación.
+</div>
+
+{# --- Trigger 1: Cupo capacitación --- #}
+<div class="hl-card demo-section">
+  <h2>Trigger 1 · Cupo capacitación <span class="demo-badge">trg_capacitacion_valida_cupo</span></h2>
+  <p class="hl-muted">
+    RF-H05 · BEFORE INSERT en CapacitacionEmpleado.
+    Intente inscribir cuando el cupo esté lleno para ver el error MySQL.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="trigger1_capacitacion">
+    <div class="hl-form-row">
+      <label for="t1_cap">Capacitación</label>
+      <select name="capacitacion_id" id="t1_cap" required>
+        {% if capacitaciones.ok %}
+          {% for row in capacitaciones.result_sets.0.rows %}
+          <option value="{{ row.0 }}">#{{ row.0 }} — {{ row.1 }} (cupo {{ row.2 }})</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    </div>
+    <div class="hl-form-row">
+      <label for="t1_emp">Empleado ID</label>
+      <input type="number" name="empleado_id" id="t1_emp" value="1" min="1" required>
+    </div>
+    <div class="hl-form-row">
+      <label for="t1_method">Método</label>
+      <select name="method" id="t1_method">
+        <option value="sp">CALL sp_inscribir_capacitacion</option>
+        <option value="insert">INSERT directo CapacitacionEmpleado</option>
+      </select>
+    </div>
+    <div class="hl-form-row demo-confirm">
+      <label><input type="checkbox" name="confirm" value="yes" required> Confirmo ejecutar inscripción (puede fallar si cupo lleno)</label>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-danger">Ejecutar demo trigger 1</button>
+  </form>
+
+  {% if t1_before %}
+  <h3>Antes</h3>
+  {% with outcome=t1_before %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% if t1_vista %}
+  <h4>VistaCapacitaciones</h4>
+  {% with outcome=t1_vista %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% endif %}
+  <h3>Ejecución</h3>
+  {% with outcome=t1_exec %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  <h3>Después</h3>
+  {% with outcome=t1_after %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% endif %}
+</div>
+
+{# --- Trigger 2: Candidato duplicado --- #}
+<div class="hl-card demo-section">
+  <h2>Trigger 2 · Postulación única <span class="demo-badge">trg_candidato_postulacion_unica</span></h2>
+  <p class="hl-muted">
+    RF-H04 · BEFORE INSERT en Candidato.
+    Repita el mismo email + vacanteId para obtener error de postulación activa duplicada.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="trigger2_candidato">
+    <div class="hl-form-row">
+      <label for="t2_vac">Vacante</label>
+      <select name="vacante_id" id="t2_vac" required>
+        {% if vacantes.ok %}
+          {% for row in vacantes.result_sets.0.rows %}
+          <option value="{{ row.0 }}">#{{ row.0 }} — {{ row.1 }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    </div>
+    <div class="hl-form-row">
+      <label for="t2_nombre">Nombre</label>
+      <input type="text" name="nombre" id="t2_nombre" value="Test" required>
+    </div>
+    <div class="hl-form-row">
+      <label for="t2_apellido">Apellido</label>
+      <input type="text" name="apellido" id="t2_apellido" value="Demo" required>
+    </div>
+    <div class="hl-form-row">
+      <label for="t2_email">Email</label>
+      <input type="email" name="email" id="t2_email" value="demo.trigger@humanlink.mx" required>
+    </div>
+    <div class="hl-form-row demo-confirm">
+      <label><input type="checkbox" name="confirm" value="yes" required> Confirmo INSERT en Candidato</label>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-danger">Ejecutar demo trigger 2</button>
+  </form>
+
+  {% if t2_before %}
+  <h3>Antes (mismo email + vacante)</h3>
+  {% with outcome=t2_before %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  <h3>Ejecución</h3>
+  {% with outcome=t2_exec %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  <h3>Después</h3>
+  {% with outcome=t2_after %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% endif %}
+</div>
+
+{# --- Trigger 3: Vacaciones --- #}
+<div class="hl-card demo-section">
+  <h2>Trigger 3 · Aprobar vacaciones <span class="demo-badge">trg_solicitud_descontar_vacaciones</span></h2>
+  <p class="hl-muted">
+    RF-H13 · CALL sp_aprobar_vacaciones actualiza CalculoLaboralInfo vía trigger AFTER UPDATE.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="trigger3_vacaciones">
+    <div class="hl-form-row">
+      <label for="t3_sol">Solicitud pendiente (VACACION)</label>
+      <select name="solicitud_id" id="t3_sol" required>
+        {% if solicitudes_pendientes.ok %}
+          {% for row in solicitudes_pendientes.result_sets.0.rows %}
+          <option value="{{ row.0 }}">#{{ row.0 }} — {{ row.3 }} ({{ row.2 }} días, emp {{ row.1 }})</option>
+          {% empty %}
+          <option value="">— Sin solicitudes pendientes —</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    </div>
+    <div class="hl-form-row">
+      <label for="t3_apr">Aprobado por (usuario ID)</label>
+      <input type="number" name="aprobado_por_id" id="t3_apr" value="{{ request.humanlink_user.user_id }}" min="1">
+    </div>
+    <div class="hl-form-row">
+      <label for="t3_resp">Respuesta</label>
+      <input type="text" name="respuesta" id="t3_resp" value="Aprobada — demo BD">
+    </div>
+    <div class="hl-form-row demo-confirm">
+      <label><input type="checkbox" name="confirm" value="yes" required> Confirmo aprobar vacaciones (modifica datos)</label>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-danger">Ejecutar demo trigger 3</button>
+  </form>
+
+  {% if t3_before %}
+  <h3>CalculoLaboralInfo — Antes</h3>
+  {% with outcome=t3_before %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% if t3_saldo %}
+  <h4>Saldo (sp_consultar_saldo_vacaciones)</h4>
+  {% with outcome=t3_saldo %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% endif %}
+  <h3>Ejecución CALL sp_aprobar_vacaciones</h3>
+  {% with outcome=t3_exec %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  <h3>CalculoLaboralInfo — Después</h3>
+  {% with outcome=t3_after %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% if t3_solicitud %}
+  <h4>Solicitud actualizada</h4>
+  {% with outcome=t3_solicitud %}{% include "database_demo/_sql_result.html" %}{% endwith %}
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

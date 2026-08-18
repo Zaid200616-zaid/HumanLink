@@ -89,7 +89,7 @@ export const NAV_ITEMS: NavItem[] = [
 
   { href: "/dashboard", label: "Inicio", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
   { href: "/perfil", label: "Mi Perfil", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
-  { href: "/buscar", label: "Búsqueda", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
+  { href: "/buscar", label: "Búsqueda", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor"] },
   { href: "/notificaciones", label: "Notificaciones", group: "General", roles: ["Administrador", "Recursos Humanos", "Supervisor", "Empleado"] },
 
 

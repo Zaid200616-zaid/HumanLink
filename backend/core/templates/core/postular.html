@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% block title %}Postular — HumanLink{% endblock %}
+{% block body %}
+<div style="min-height:100vh;padding:2rem;background:var(--color-bg);">
+  <div style="max-width:560px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <a href="/" class="hl-brand-name" style="font-size:1.5rem;text-decoration:none;color:inherit;">Human<span style="color:var(--brand-cyan);">Link</span></a>
+      <p style="color:var(--color-muted);font-size:0.85rem;margin-top:0.35rem;">Postulación a vacantes</p>
+    </div>
+
+    {% if messages %}
+    <div class="hl-messages">
+      {% for message in messages %}
+      <div class="hl-msg hl-msg-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="hl-card">
+      <h1 class="hl-page-title" style="font-size:1.15rem;">Enviar postulación</h1>
+      <form method="post" enctype="multipart/form-data" style="margin-top:1rem;">
+        {% csrf_token %}
+        <div class="hl-form-group">
+          <label class="hl-label">Vacante *</label>
+          <select class="hl-select" name="vacante_id" required>
+            <option value="">Seleccione...</option>
+            {% for v in vacantes %}
+            <option value="{{ v.id }}">{{ v.titulo }} — {{ v.departamento.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="hl-grid hl-grid-2">
+          <div class="hl-form-group">
+            <label class="hl-label">Nombre *</label>
+            <input class="hl-input" name="nombre" required>
+          </div>
+          <div class="hl-form-group">
+            <label class="hl-label">Apellido paterno *</label>
+            <input class="hl-input" name="apellido_paterno" required>
+          </div>
+        </div>
+        <div class="hl-form-group">
+          <label class="hl-label">Apellido materno</label>
+          <input class="hl-input" name="apellido_materno">
+        </div>
+        <div class="hl-form-group">
+          <label class="hl-label">Correo *</label>
+          <input class="hl-input" type="email" name="email" required>
+        </div>
+        <div class="hl-grid hl-grid-2">
+          <div class="hl-form-group">
+            <label class="hl-label">Teléfono</label>
+            <input class="hl-input" name="telefono">
+          </div>
+          <div class="hl-form-group">
+            <label class="hl-label">CURP</label>
+            <input class="hl-input" name="curp">
+          </div>
+        </div>
+        <button type="submit" class="hl-btn hl-btn-primary" style="width:100%;margin-top:0.5rem;">Enviar postulación</button>
+      </form>
+      <p style="text-align:center;margin-top:1rem;font-size:0.8rem;">
+        <a href="{% url 'login' %}">¿Eres empleado? Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

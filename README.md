@@ -4,7 +4,23 @@ Aplicación web con APIs REST, **MySQL/MariaDB**, autenticación JWT, roles gran
 
 > **Nota:** No incluye nómina ni pagos. Prima/aguinaldo es solo informativo (LFT).
 
-**Stack:** Next.js 15 · React 19 · Prisma · MySQL 8+ / MariaDB 10.6+ · Tailwind 4
+**Stack principal:** Next.js 15 · React 19 · Prisma · Tailwind 4 · MySQL/MariaDB
+
+> **Nota:** La carpeta `backend/` (Django) existe solo como referencia académica previa y **no se utiliza** en la operación normal de HumanLink.
+
+### Ejecutar la aplicación
+
+Doble clic en **`iniciar.bat`** o:
+
+```powershell
+npm install
+npm run db:setup    # primera vez
+npm run dev
+```
+
+Abrir **http://localhost:3000** · Contraseña demo: **HumanLink2026!**
+
+Los triggers MySQL bloquean operaciones inválidas y el mensaje del trigger se muestra en toast al usar el flujo normal (inscripción a capacitación, postulación duplicada, aprobación de vacaciones).
 
 ---
 

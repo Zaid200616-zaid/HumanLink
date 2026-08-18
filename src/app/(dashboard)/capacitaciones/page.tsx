@@ -34,6 +34,8 @@ export default function CapacitacionesPage() {
   const [form, setForm] = useState(emptyCap);
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmEliminar, setConfirmEliminar] = useState<number | null>(null);
+  const [filtroTexto, setFiltroTexto] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
 
   function cargar() {
     fetchList<Capacitacion>("/api/capacitaciones").then(setCaps);
@@ -92,6 +94,16 @@ export default function CapacitacionesPage() {
 
   if (sessionLoading) return <LoadingState />;
 
+  const capsFiltradas = caps.filter((c) => {
+    if (filtroEstado && c.estado !== filtroEstado) return false;
+    if (filtroTexto.trim()) {
+      const q = filtroTexto.trim().toLowerCase();
+      const texto = [c.nombre, c.instructor, c.estado].filter(Boolean).join(" ").toLowerCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
     <div>
       <PageHeader
@@ -112,11 +124,35 @@ export default function CapacitacionesPage() {
         </form>
       )}
 
+      <div className="card mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="label-field">Buscar</label>
+          <input
+            className="input-field w-full"
+            placeholder="Nombre del curso o instructor…"
+            value={filtroTexto}
+            onChange={(e) => setFiltroTexto(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label-field">Estado</label>
+          <select className="input-field w-full" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="PROGRAMADA">Programada</option>
+            <option value="EN_CURSO">En curso</option>
+            <option value="FINALIZADA">Finalizada</option>
+            <option value="CANCELADA">Cancelada</option>
+          </select>
+        </div>
+      </div>
+
       <div className="grid gap-6">
         {caps.length === 0 ? (
           <div className="card text-center text-muted">No hay capacitaciones programadas</div>
+        ) : capsFiltradas.length === 0 ? (
+          <div className="card text-center text-muted">No hay capacitaciones que coincidan con los filtros</div>
         ) : (
-          caps.map((c) => (
+          capsFiltradas.map((c) => (
             <div key={c.id} className="card">
               <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                 <div>
@@ -169,13 +205,10 @@ export default function CapacitacionesPage() {
                 </div>
               </div>
 
-              {isEmpleado && !c.inscrito && c.cupoDisponible > 0 && (
+              {isEmpleado && !c.inscrito && (
                 <button onClick={() => inscribirse(c.id)} className="btn-secondary mt-4">
                   Inscribirme en este curso
                 </button>
-              )}
-              {isEmpleado && !c.inscrito && c.cupoDisponible <= 0 && (
-                <p className="mt-4 text-sm" style={{ color: "var(--color-warning)" }}>Cupo lleno</p>
               )}
             </div>
           ))

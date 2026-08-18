@@ -1,0 +1,27 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="hl-card">
+  <h2>SHOW INDEX FROM</h2>
+  <p class="hl-muted">Seleccione una tabla y ejecute la consulta de índices (solo lectura).</p>
+
+  <form method="post" class="demo-inline-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="show_index">
+    <div class="hl-form-row">
+      <label for="table">Tabla</label>
+      <select name="table" id="table">
+        {% for t in tables %}
+        <option value="{{ t }}" {% if t == selected_table %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-primary">Mostrar índices</button>
+  </form>
+
+  {% if outcome %}
+  <h3 style="margin-top: 1rem;">Resultado: {{ selected_table }}</h3>
+  {% include "database_demo/_sql_result.html" %}
+  {% endif %}
+</div>
+{% endblock %}

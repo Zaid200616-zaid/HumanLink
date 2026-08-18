@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% block title %}Búsqueda — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Búsqueda</h1>
+<p class="hl-page-subtitle">Busque empleados, vacantes, departamentos y documentos</p>
+
+<form method="get" style="margin-bottom:1.25rem;display:flex;gap:0.5rem;">
+  <input class="hl-input" type="search" name="q" value="{{ q }}" placeholder="Mínimo 2 caracteres..." style="max-width:400px;">
+  <button type="submit" class="hl-btn hl-btn-primary">Buscar</button>
+</form>
+
+{% if q|length >= 2 %}
+<div class="hl-grid hl-grid-2">
+  <div class="hl-card">
+    <h2 style="font-size:0.9rem;margin-bottom:0.5rem;">Empleados</h2>
+    {% for e in resultados.empleados %}
+    <p style="font-size:0.85rem;padding:0.25rem 0;"><a href="/empleados/{{ e.id }}/">{{ e.nombre }} {{ e.apellidoPaterno }}</a> — {{ e.puesto }}</p>
+    {% empty %}<p style="color:var(--color-muted);font-size:0.85rem;">Sin resultados</p>{% endfor %}
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:0.9rem;margin-bottom:0.5rem;">Departamentos</h2>
+    {% for d in resultados.departamentos %}
+    <p style="font-size:0.85rem;padding:0.25rem 0;"><a href="/departamentos/{{ d.id }}/">{{ d.nombre }}</a></p>
+    {% empty %}<p style="color:var(--color-muted);font-size:0.85rem;">Sin resultados</p>{% endfor %}
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:0.9rem;margin-bottom:0.5rem;">Vacantes</h2>
+    {% for v in resultados.vacantes %}
+    <p style="font-size:0.85rem;padding:0.25rem 0;">{{ v.titulo }} — {{ v.estado }}</p>
+    {% empty %}<p style="color:var(--color-muted);font-size:0.85rem;">Sin resultados</p>{% endfor %}
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:0.9rem;margin-bottom:0.5rem;">Candidatos</h2>
+    {% for c in resultados.candidatos %}
+    <p style="font-size:0.85rem;padding:0.25rem 0;">{{ c.nombre }} {{ c.apellidoPaterno }} — {{ c.etapa }}</p>
+    {% empty %}<p style="color:var(--color-muted);font-size:0.85rem;">Sin resultados</p>{% endfor %}
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:0.9rem;margin-bottom:0.5rem;">Documentos</h2>
+    {% for d in resultados.documentos %}
+    <p style="font-size:0.85rem;padding:0.25rem 0;">{{ d.nombre }} — {{ d.tipo }}</p>
+    {% empty %}<p style="color:var(--color-muted);font-size:0.85rem;">Sin resultados</p>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

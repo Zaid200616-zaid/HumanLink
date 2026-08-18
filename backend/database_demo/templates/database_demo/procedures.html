@@ -1,0 +1,55 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="hl-card">
+  <h2>Procedimientos almacenados</h2>
+  <p class="hl-muted">Ejecute CALL con parámetros. Los SP que modifican datos requieren confirmación.</p>
+
+  <form method="get" class="demo-inline-form" style="margin-bottom: 1rem;">
+    <div class="hl-form-row">
+      <label for="sp">Procedimiento</label>
+      <select name="sp" id="sp" onchange="this.form.submit()">
+        {% for name, meta in procedures.items %}
+        <option value="{{ name }}" {% if name == selected_sp %}selected{% endif %}>{{ meta.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="execute_sp">
+    <input type="hidden" name="sp" value="{{ selected_sp }}">
+
+    <h3>{{ sp_meta.label }}</h3>
+    <pre class="hl-sql">CALL {{ selected_sp }}({% for p in sp_meta.params %}@{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %});</pre>
+
+    {% for param in sp_meta.params %}
+    <div class="hl-form-row">
+      <label for="{{ param.name }}">{{ param.label }}</label>
+      {% if param.type == "select" %}
+      <select name="{{ param.name }}" id="{{ param.name }}">
+        {% for choice in param.choices %}
+        <option value="{{ choice }}">{{ choice }}</option>
+        {% endfor %}
+      </select>
+      {% elif param.type == "textarea" %}
+      <textarea name="{{ param.name }}" id="{{ param.name }}" rows="2"></textarea>
+      {% else %}
+      <input type="{{ param.type }}" name="{{ param.name }}" id="{{ param.name }}">
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="hl-form-row demo-confirm">
+      <label><input type="checkbox" name="confirm" value="yes" required> Confirmo ejecutar CALL {{ selected_sp }}</label>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-primary">Ejecutar procedimiento</button>
+  </form>
+
+  {% if outcome %}
+  <h3 style="margin-top: 1.25rem;">Resultado</h3>
+  {% include "database_demo/_sql_result.html" %}
+  {% endif %}
+</div>
+{% endblock %}

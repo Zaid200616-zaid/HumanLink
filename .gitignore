@@ -46,3 +46,10 @@ next-env.d.ts
 # uploads
 /public/uploads/*
 /uploads/
+
+# python / django
+backend/venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+*.pyo
+.pytest_cache/

@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}Asignación de roles — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Asignación de roles</h1>
+<p class="hl-page-subtitle">Roles del sistema y usuarios activos</p>
+
+<div class="hl-grid hl-grid-2">
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Roles</h2>
+    <div class="hl-table-wrap">
+      <table class="hl-table">
+        <thead><tr><th>Rol</th><th>Descripción</th></tr></thead>
+        <tbody>
+          {% for r in roles %}
+          <tr>
+            <td>{{ r.nombre }}</td>
+            <td style="color:var(--color-muted);font-size:0.85rem;">{{ r.descripcion|default:"—"|truncatechars:80 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="hl-card">
+    <h2 style="font-size:1rem;margin-bottom:0.75rem;">Usuarios</h2>
+    <div class="hl-table-wrap">
+      <table class="hl-table">
+        <thead><tr><th>Correo</th><th>Rol</th></tr></thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td>{{ u.email }}</td>
+            <td>{{ u.rol.nombre }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

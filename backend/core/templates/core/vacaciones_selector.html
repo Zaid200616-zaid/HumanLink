@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Expediente de Vacaciones — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Expediente de Vacaciones</h1>
+<p class="hl-page-subtitle">Seleccione un empleado para consultar su expediente</p>
+
+<div class="hl-card">
+  <div class="hl-table-wrap">
+    <table class="hl-table">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Puesto</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in empleados %}
+        <tr>
+          <td>{{ e.nombre }} {{ e.apellidoPaterno }}</td>
+          <td>{{ e.puesto }}</td>
+          <td><a href="/vacaciones/expediente/{{ e.id }}/">Ver expediente</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

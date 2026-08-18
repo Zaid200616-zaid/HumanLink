@@ -1,0 +1,39 @@
+{% extends "database_demo/base_demo.html" %}
+
+{% block demo_content %}
+<div class="demo-grid">
+  <a class="demo-tile" href="{% url 'database_demo:info' %}">
+    <strong>Info BD</strong>
+    <span>VERSION(), SHOW TABLES, TRIGGERS, PROCEDURE STATUS, vistas</span>
+  </a>
+  <a class="demo-tile" href="{% url 'database_demo:indexes' %}">
+    <strong>Índices</strong>
+    <span>SHOW INDEX FROM tabla seleccionada</span>
+  </a>
+  <a class="demo-tile" href="{% url 'database_demo:triggers' %}">
+    <strong>Triggers</strong>
+    <span>3 demos obligatorios con estado antes/después</span>
+  </a>
+  <a class="demo-tile" href="{% url 'database_demo:procedures' %}">
+    <strong>Procedimientos</strong>
+    <span>{{ sp_count }} SP documentados · CALL con parámetros</span>
+  </a>
+  <a class="demo-tile" href="{% url 'database_demo:views' %}">
+    <strong>Vistas</strong>
+    <span>{{ vista_count }} vistas Vista* · SELECT</span>
+  </a>
+  <a class="demo-tile" href="{% url 'database_demo:queries' %}">
+    <strong>Consultas avanzadas</strong>
+    <span>{{ query_count }} consultas Q1–Q12 desde advanced_queries.sql</span>
+  </a>
+</div>
+
+<div class="hl-card" style="margin-top: 1.25rem;">
+  <h2>Uso académico</h2>
+  <ul class="hl-muted" style="margin: 0; padding-left: 1.25rem;">
+    <li>Las consultas de catálogo (info, índices, vistas, Q1–Q12) se ejecutan solo al pulsar el botón correspondiente.</li>
+    <li>Los triggers destructivos (cupo lleno, candidato duplicado, aprobar vacaciones) requieren POST + confirmación.</li>
+    <li>Toda la lógica de integridad reside en MySQL (triggers/SP); Django solo invoca SQL crudo.</li>
+  </ul>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiError, apiSuccess, requireAuth } from "@/lib/api";
+import { apiError, apiSuccess, requireAuth, handlePrismaError } from "@/lib/api";
 import { parsePermisos, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { registrarAuditoria } from "@/lib/auditoria";
@@ -12,6 +12,7 @@ import {
   construirExpedienteVacaciones,
   haySolapamiento,
 } from "@/lib/vacaciones";
+import { aprobarVacacionesSp } from "@/lib/mysql-vacaciones";
 
 async function notificarSupervisor(empleadoId: number, mensaje: string) {
   const emp = await prisma.empleado.findUnique({
@@ -263,34 +264,57 @@ export async function PATCH(request: NextRequest) {
     return apiError("Rechazada por el supervisor");
   }
 
-  if (estado === "APROBADA" && solicitudActual.tipo === "VACACION") {
-    const todas = await prisma.solicitudPermiso.findMany({
-      where: { empleadoId: solicitudActual.empleadoId },
-    });
-    const exp = construirExpedienteVacaciones(
-      solicitudActual.empleado,
-      todas,
-      solicitudActual.id
-    );
-    if (!exp.puedeAutorizar) {
-      return apiError(`Saldo insuficiente: ${exp.diasDisponibles} días disponibles`);
-    }
-  }
-
   const respuestaFinal =
     respuesta?.trim() ||
     (estado === "APROBADA" ? "Aprobada por Recursos Humanos" : "Rechazada por Recursos Humanos");
 
-  const solicitud = await prisma.solicitudPermiso.update({
-    where: { id: parseInt(id) },
-    data: {
-      estado,
-      respuesta: respuestaFinal,
-      aprobadoPorId: session!.empleadoId ?? undefined,
-      fechaResolucion: new Date(),
-    },
-    include: { empleado: true },
-  });
+  let solicitud;
+  try {
+    if (estado === "APROBADA" && solicitudActual.tipo === "VACACION") {
+      const solicitudesEmp = await prisma.solicitudPermiso.findMany({
+        where: { empleadoId: solicitudActual.empleadoId },
+      });
+      const exp = construirExpedienteVacaciones(
+        solicitudActual.empleado,
+        solicitudesEmp,
+        parseInt(id)
+      );
+      if (!exp.puedeAutorizar) {
+        return apiError("Saldo insuficiente de vacaciones para aprobar la solicitud.");
+      }
+
+      const filas = await aprobarVacacionesSp(
+        parseInt(id),
+        session!.empleadoId ?? null,
+        respuestaFinal
+      );
+      solicitud = await prisma.solicitudPermiso.findUnique({
+        where: { id: parseInt(id) },
+        include: { empleado: true },
+      });
+      if (!solicitud) return apiError("Solicitud no encontrada tras aprobar", 404);
+
+      if (filas === 0 && solicitud.estado !== "APROBADA") {
+        if (solicitud.estado === "PENDIENTE") {
+          return apiError("Saldo insuficiente de vacaciones para aprobar la solicitud.");
+        }
+        return apiError("No se pudo procesar la aprobación. Verifique el estado de la solicitud.");
+      }
+    } else {
+      solicitud = await prisma.solicitudPermiso.update({
+        where: { id: parseInt(id) },
+        data: {
+          estado,
+          respuesta: respuestaFinal,
+          aprobadoPorId: session!.empleadoId ?? undefined,
+          fechaResolucion: new Date(),
+        },
+        include: { empleado: true },
+      });
+    }
+  } catch (e) {
+    return handlePrismaError(e);
+  }
 
   if (estado === "APROBADA") {
     await sincronizarAsistenciasSolicitud(

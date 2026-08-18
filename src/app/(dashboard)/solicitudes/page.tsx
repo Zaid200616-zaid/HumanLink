@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 
-import { fetchList } from "@/lib/fetch-client";
+import { fetchList, fetchJson } from "@/lib/fetch-client";
 
 import { useSession } from "@/lib/use-session";
 
@@ -65,7 +65,7 @@ const emptyForm = { tipo: "PERMISO", fechaInicio: "", fechaFin: "", motivo: "" }
 
 export default function SolicitudesPage() {
 
-  const { canManage, isEmpleado, isSupervisor, loading: sessionLoading } = useSession();
+  const { canManage, isEmpleado, isSupervisor, loading: sessionLoading, user } = useSession();
   const { showSuccess, showError } = useToast();
   const [solicitudesEquipo, setSolicitudesEquipo] = useState<Solicitud[]>([]);
 
@@ -84,6 +84,9 @@ export default function SolicitudesPage() {
   const [respuestaCustom, setRespuestaCustom] = useState("");
 
   const [miExpediente, setMiExpediente] = useState<{ diasDisponibles: number; diasTotales: number; diasUsados: number } | null>(null);
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroTexto, setFiltroTexto] = useState("");
 
 
 
@@ -121,30 +124,29 @@ export default function SolicitudesPage() {
 
 
   useEffect(() => {
-
-    if (isEmpleado) {
-
-      fetch("/api/auth/me")
-
-        .then((r) => r.json())
-
-        .then((me) => {
-
-          if (me.empleado?.id) {
-
-            fetch(`/api/vacaciones/expediente/${me.empleado.id}`)
-
-              .then((r) => r.json())
-
-              .then((exp) => setMiExpediente(exp));
-
-          }
-
+    if (!isEmpleado) return;
+    async function cargarExpediente() {
+      let empleadoId = user?.empleadoId;
+      if (!empleadoId) {
+        const { data: me } = await fetchJson<{ empleado?: { id: number } }>("/api/auth/me");
+        empleadoId = me?.empleado?.id;
+      }
+      if (!empleadoId) return;
+      const { data } = await fetchJson<{
+        diasDisponibles: number;
+        diasTotales: number;
+        diasUsados: number;
+      }>(`/api/vacaciones/expediente/${empleadoId}`);
+      if (data && typeof data.diasDisponibles === "number") {
+        setMiExpediente({
+          diasDisponibles: data.diasDisponibles,
+          diasTotales: data.diasTotales,
+          diasUsados: data.diasUsados,
         });
-
+      }
     }
-
-  }, [isEmpleado]);
+    cargarExpediente();
+  }, [isEmpleado, user?.empleadoId]);
 
 
 
@@ -228,7 +230,11 @@ export default function SolicitudesPage() {
       );
     } else {
       const data = await res.json().catch(() => ({}));
-      showError(data.error || MSG.errorGenerico);
+      const msg =
+        data.source === "database"
+          ? data.error || MSG.errorGenerico
+          : data.error || MSG.errorGenerico;
+      showError(msg);
     }
 
     setResolverModal(null);
@@ -245,7 +251,25 @@ export default function SolicitudesPage() {
 
   if (sessionLoading) return <LoadingState />;
 
-
+  const solicitudesFiltradas = solicitudes.filter((s) => {
+    if (filtroEstado && s.estado !== filtroEstado) return false;
+    if (filtroTipo && s.tipo !== filtroTipo) return false;
+    if (filtroTexto.trim()) {
+      const q = filtroTexto.trim().toLowerCase();
+      const texto = [
+        s.motivo,
+        s.tipo,
+        s.estado,
+        s.empleado?.nombre,
+        s.empleado?.apellidoPaterno,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  });
 
   return (
 
@@ -424,7 +448,34 @@ export default function SolicitudesPage() {
         {isEmpleado ? "Mis solicitudes" : isSupervisor ? "Solicitudes de mi equipo" : "Solicitudes del personal"}
       </h2>
 
-
+      <div className="card mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="label-field">Buscar</label>
+          <input
+            className="input-field w-full"
+            placeholder="Motivo, empleado, tipo…"
+            value={filtroTexto}
+            onChange={(e) => setFiltroTexto(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label-field">Estado</label>
+          <select className="input-field w-full" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="APROBADA">Aprobada</option>
+            <option value="RECHAZADA">Rechazada</option>
+          </select>
+        </div>
+        <div>
+          <label className="label-field">Tipo</label>
+          <select className="input-field w-full" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="PERMISO">Permiso</option>
+            <option value="VACACION">Vacación</option>
+          </select>
+        </div>
+      </div>
 
       <div className="space-y-4">
 
@@ -432,9 +483,13 @@ export default function SolicitudesPage() {
 
           <div className="card text-center text-muted">No hay solicitudes registradas</div>
 
+        ) : solicitudesFiltradas.length === 0 ? (
+
+          <div className="card text-center text-muted">No hay solicitudes que coincidan con los filtros</div>
+
         ) : (
 
-          solicitudes.map((s) => (
+          solicitudesFiltradas.map((s) => (
 
             <div key={s.id} className="card">
 
@@ -697,5 +752,3 @@ export default function SolicitudesPage() {
   );
 
 }
-
-

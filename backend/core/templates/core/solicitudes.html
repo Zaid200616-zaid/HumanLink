@@ -1,0 +1,116 @@
+{% extends "core/base.html" %}
+{% block title %}Permisos y Vacaciones — HumanLink{% endblock %}
+
+{% block content %}
+<h1 class="hl-page-title">Permisos y Vacaciones</h1>
+<p class="hl-page-subtitle">Solicitudes de permiso y vacaciones</p>
+
+{% if rol == "Supervisor" %}
+<p style="margin-bottom:1rem;">
+  <a href="?vista=equipo" class="hl-btn hl-btn-secondary hl-btn-sm">Pendientes de mi equipo</a>
+  <a href="/solicitudes/" class="hl-btn hl-btn-secondary hl-btn-sm">Todas</a>
+</p>
+{% endif %}
+
+{% if puede_crear %}
+<div class="hl-card" style="margin-bottom:1rem;">
+  <h2 style="font-size:1rem;margin-bottom:0.75rem;">Nueva solicitud</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="crear">
+    <div class="hl-grid hl-grid-2">
+      <div class="hl-form-group">
+        <label class="hl-label">Tipo</label>
+        <select class="hl-select" name="tipo" required>
+          <option value="PERMISO">Permiso</option>
+          <option value="VACACION">Vacación</option>
+        </select>
+      </div>
+      <div class="hl-form-group">
+        <label class="hl-label">Fecha inicio</label>
+        <input class="hl-input" type="date" name="fecha_inicio" required>
+      </div>
+      <div class="hl-form-group">
+        <label class="hl-label">Fecha fin</label>
+        <input class="hl-input" type="date" name="fecha_fin" required>
+      </div>
+    </div>
+    <div class="hl-form-group">
+      <label class="hl-label">Motivo (mín. 10 caracteres)</label>
+      <textarea class="hl-textarea" name="motivo" required minlength="10"></textarea>
+    </div>
+    <button type="submit" class="hl-btn hl-btn-primary">Enviar solicitud</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="hl-card">
+  <div class="hl-table-wrap">
+    <table class="hl-table">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Tipo</th>
+          <th>Periodo</th>
+          <th>Días</th>
+          <th>Estado</th>
+          <th>Supervisor</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr>
+          <td>{{ s.empleado.nombre }} {{ s.empleado.apellidoPaterno }}</td>
+          <td>{{ s.get_tipo_display|default:s.tipo }}</td>
+          <td>{{ s.fechaInicio|date:"d/m/Y" }} – {{ s.fechaFin|date:"d/m/Y" }}</td>
+          <td>{{ s.diasSolicitados }}</td>
+          <td><span class="hl-badge hl-badge-{{ s.estado|lower }}">{{ s.estado }}</span></td>
+          <td>{{ s.aprobacionSupervisor }}</td>
+          <td>
+            {% if s.estado == "PENDIENTE" %}
+              {% if rol == "Supervisor" and s.aprobacionSupervisor == "PENDIENTE" and s.empleado.departamento and s.empleado.departamento.supervisor_id == empleado_id %}
+              <form method="post" style="display:inline-flex;gap:0.25rem;flex-wrap:wrap;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supervisor">
+                <input type="hidden" name="solicitud_id" value="{{ s.id }}">
+                <input type="hidden" name="estado" value="APROBADA">
+                <button type="submit" class="hl-btn hl-btn-primary hl-btn-sm">Aprobar</button>
+              </form>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supervisor">
+                <input type="hidden" name="solicitud_id" value="{{ s.id }}">
+                <input type="hidden" name="estado" value="RECHAZADA">
+                <button type="submit" class="hl-btn hl-btn-danger hl-btn-sm">Rechazar</button>
+              </form>
+              {% endif %}
+              {% if puede_rh and s.aprobacionSupervisor != "PENDIENTE" and s.aprobacionSupervisor != "RECHAZADO" %}
+              <form method="post" style="display:inline-flex;gap:0.25rem;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rh">
+                <input type="hidden" name="solicitud_id" value="{{ s.id }}">
+                <input type="hidden" name="estado" value="APROBADA">
+                <button type="submit" class="hl-btn hl-btn-primary hl-btn-sm">RH Aprobar</button>
+              </form>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rh">
+                <input type="hidden" name="solicitud_id" value="{{ s.id }}">
+                <input type="hidden" name="estado" value="RECHAZADA">
+                <button type="submit" class="hl-btn hl-btn-danger hl-btn-sm">RH Rechazar</button>
+              </form>
+              {% endif %}
+            {% else %}
+            —
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;color:var(--color-muted);">Sin solicitudes</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

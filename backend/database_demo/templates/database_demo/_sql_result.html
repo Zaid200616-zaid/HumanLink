@@ -1,0 +1,43 @@
+{% if outcome %}
+  {% if outcome.error %}
+  <div class="hl-error-box">
+    <strong>Error MySQL:</strong> {{ outcome.error }}
+  </div>
+  {% if outcome.sql_executed %}
+  <pre class="hl-sql">{{ outcome.sql_executed }}</pre>
+  {% endif %}
+  {% else %}
+    {% if outcome.sql_executed %}
+    <pre class="hl-sql">{{ outcome.sql_executed }}</pre>
+    {% endif %}
+    {% for rs in outcome.result_sets %}
+      {% if rs.columns %}
+      <p class="hl-muted">{{ rs.rows|length }} fila(s)</p>
+      <div style="overflow-x: auto;">
+        <table class="hl-table">
+          <thead>
+            <tr>
+              {% for col in rs.columns %}
+              <th>{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rs.rows %}
+            <tr>
+              {% for cell in row %}
+              <td>{{ cell|default:"—" }}</td>
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr><td colspan="{{ rs.columns|length }}">Sin filas</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    {% empty %}
+    <p class="hl-muted">Ejecutado correctamente (sin conjunto de resultados).</p>
+    {% endfor %}
+  {% endif %}
+{% endif %}
