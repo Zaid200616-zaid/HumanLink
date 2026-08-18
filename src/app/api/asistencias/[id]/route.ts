@@ -21,8 +21,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const { error, session } = await requireAuth("asistencias:write");
   if (error || !session) return error;
 
-  if (session.rol !== "Administrador") {
-    return apiError("Solo el Administrador puede modificar asistencias", 403);
+  if (session.rol !== "Administrador" && session.rol !== "Recursos Humanos") {
+    return apiError("Sin permisos para modificar asistencias", 403);
   }
 
   const id = parseInt((await params).id);

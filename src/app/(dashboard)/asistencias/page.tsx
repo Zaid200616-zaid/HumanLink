@@ -25,8 +25,6 @@ type AsistenciaRow = {
   };
 };
 
-type EmpleadoOpt = { id: number; nombre: string; apellidoPaterno: string };
-
 type StatsDia = {
   puntuales: number;
   retardos: number;
@@ -38,7 +36,6 @@ type StatsDia = {
 const ESTADOS = ["PUNTUAL", "RETARDO", "FALTA", "PERMISO", "VACACION"] as const;
 
 const formVacío = {
-  empleadoId: "",
   fecha: new Date().toISOString().slice(0, 10),
   horaEntrada: "",
   horaSalida: "",
@@ -47,12 +44,11 @@ const formVacío = {
 };
 
 export default function AsistenciasPage() {
-  const { isAdmin, canManage, isSupervisor, loading: sessionLoading } = useSession();
+  const { isAdmin, isRH, canManage, isSupervisor, loading: sessionLoading } = useSession();
   const esConsultor = canManage || isAdmin || isSupervisor;
-  const puedeRegistrar = canManage || isAdmin;
-  const puedeEditarEliminar = isAdmin;
+  const puedeEditar = isAdmin || isRH;
+  const puedeEliminar = isAdmin;
   const [registros, setRegistros] = useState<AsistenciaRow[]>([]);
-  const [empleados, setEmpleados] = useState<EmpleadoOpt[]>([]);
   const [form, setForm] = useState(formVacío);
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,12 +85,7 @@ export default function AsistenciasPage() {
     if (sessionLoading) return;
     cargar();
     cargarStats();
-    if (puedeRegistrar) {
-      fetch("/api/empleados?pageSize=500&activo=true")
-        .then((r) => r.json())
-        .then((d) => setEmpleados(d.items || []));
-    }
-  }, [cargar, cargarStats, puedeRegistrar, sessionLoading, filtroFecha]);
+  }, [cargar, cargarStats, sessionLoading, filtroFecha]);
 
   const registrosFiltrados = registros.filter((r) => {
     if (filtroEstado && r.estado !== filtroEstado) return false;
@@ -116,43 +107,21 @@ export default function AsistenciasPage() {
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
-    if (editId && !puedeEditarEliminar) return;
-    if (!editId && !puedeRegistrar) return;
+    if (!editId || !puedeEditar) return;
 
-    if (editId) {
-      const res = await fetch(`/api/asistencias/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          horaEntrada: form.horaEntrada || null,
-          horaSalida: form.horaSalida || null,
-          estado: form.estado,
-          notas: form.notas || null,
-          fecha: form.fecha,
-        }),
-      });
-      if (res.ok) {
-        setEditId(null);
-        setForm(formVacío);
-        cargar();
-        cargarStats();
-      }
-      return;
-    }
-
-    const res = await fetch("/api/asistencias", {
-      method: "POST",
+    const res = await fetch(`/api/asistencias/${editId}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        empleadoId: Number(form.empleadoId),
-        fecha: form.fecha,
         horaEntrada: form.horaEntrada || null,
         horaSalida: form.horaSalida || null,
         estado: form.estado,
         notas: form.notas || null,
+        fecha: form.fecha,
       }),
     });
     if (res.ok) {
+      setEditId(null);
       setForm(formVacío);
       cargar();
       cargarStats();
@@ -162,7 +131,6 @@ export default function AsistenciasPage() {
   function editar(r: AsistenciaRow) {
     setEditId(r.id);
     setForm({
-      empleadoId: String(r.empleado.id),
       fecha: r.fecha.slice(0, 10),
       horaEntrada: r.horaEntrada || "",
       horaSalida: r.horaSalida || "",
@@ -213,20 +181,9 @@ export default function AsistenciasPage() {
         </div>
       )}
 
-      {puedeRegistrar && (
+      {editId && puedeEditar && (
         <form onSubmit={guardar} className="card mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <h2 className="font-semibold md:col-span-3">{editId ? "Corregir asistencia" : "Registrar asistencia"}</h2>
-          {!editId && (
-            <div>
-              <label className="label-field">Empleado</label>
-              <select className="input-field w-full" value={form.empleadoId} onChange={(e) => setForm({ ...form, empleadoId: e.target.value })} required>
-                <option value="">Seleccione…</option>
-                {empleados.map((emp) => (
-                  <option key={emp.id} value={emp.id}>{emp.nombre} {emp.apellidoPaterno}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <h2 className="font-semibold md:col-span-3">Corregir asistencia</h2>
           <div>
             <label className="label-field">Fecha</label>
             <input type="date" className="input-field w-full" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} required />
@@ -252,10 +209,8 @@ export default function AsistenciasPage() {
             <input className="input-field w-full" value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} />
           </div>
           <div className="md:col-span-3 flex gap-2">
-            <button type="submit" className="btn-primary text-sm">{editId ? "Guardar corrección" : "Registrar"}</button>
-            {editId && (
-              <button type="button" className="btn-outline text-sm" onClick={() => { setEditId(null); setForm(formVacío); }}>Cancelar</button>
-            )}
+            <button type="submit" className="btn-primary text-sm">Guardar corrección</button>
+            <button type="button" className="btn-outline text-sm" onClick={() => { setEditId(null); setForm(formVacío); }}>Cancelar</button>
           </div>
         </form>
       )}
@@ -329,13 +284,17 @@ export default function AsistenciasPage() {
                     <td>
                       <StatusBadge estado={fila.estado} />
                     </td>
-                    {puedeEditarEliminar && (
+                    {(puedeEditar || puedeEliminar) && (
                       <td>
-                        <button type="button" className="link-action mr-2 text-xs" onClick={() => editar(fila)}>Editar</button>
-                        <button type="button" className="link-danger text-xs" onClick={() => eliminar(fila.id)}>Eliminar</button>
+                        {puedeEditar && (
+                          <button type="button" className="link-action mr-2 text-xs" onClick={() => editar(fila)}>Editar</button>
+                        )}
+                        {puedeEliminar && (
+                          <button type="button" className="link-danger text-xs" onClick={() => eliminar(fila.id)}>Eliminar</button>
+                        )}
                       </td>
                     )}
-                    {esConsultor && !puedeEditarEliminar && <td className="text-muted text-xs">Solo lectura</td>}
+                    {esConsultor && !puedeEditar && !puedeEliminar && <td className="text-muted text-xs">Solo lectura</td>}
                   </tr>
                 );
               })

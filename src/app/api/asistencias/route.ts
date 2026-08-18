@@ -46,32 +46,8 @@ export async function POST(request: NextRequest) {
   const { error } = await requireAuth("asistencias:write");
   if (error) return error;
 
-  const body = await request.json();
-  const { empleadoId, fecha, horaEntrada, horaSalida, estado, notas } = body;
-
-  if (!empleadoId || !fecha || !estado) {
-    return apiError("Campos requeridos: empleadoId, fecha, estado");
-  }
-
-  const asistencia = await prisma.asistencia.upsert({
-    where: {
-      empleadoId_fecha: {
-        empleadoId: parseInt(empleadoId),
-        fecha: new Date(fecha),
-      },
-    },
-    update: { horaEntrada, horaSalida, estado, notas },
-    create: {
-      empleadoId: parseInt(empleadoId),
-      fecha: new Date(fecha),
-      horaEntrada,
-      horaSalida,
-      estado,
-      notas,
-      turnoNombre: body.turnoNombre,
-    },
-    include: { empleado: true },
-  });
-
-  return apiSuccess(asistencia, 201);
+  return apiError(
+    "El registro manual de asistencias no está disponible. Use Registrar Entrada o edite un registro existente.",
+    403,
+  );
 }
